@@ -9,17 +9,43 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Shield } from "lucide-react"
+import { useMutation } from "@tanstack/react-query"
+import { loginAdmin, setAuthTokens, setAdminInfo } from "@/lib/auth"
+import { toast } from "sonner"
 
 export default function AdminLoginPage() {
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
     rememberMe: false,
   })
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
 
   const router = useRouter()
+
+  const loginMutation = useMutation({
+    mutationFn: loginAdmin,
+    onSuccess: (data) => {
+      // Store tokens and admin info
+      setAuthTokens(data.access_token, data.refresh_token)
+      setAdminInfo(data.admin_info)
+
+      // Show success message
+      toast.success("Login successful!", {
+        description: `Welcome back, ${data.admin_info.first_name}!`,
+      })
+
+      // Redirect to dashboard
+      router.push("/dashboard")
+    },
+    onError: (error: any) => {
+      // Handle login error
+      const errorMessage = error.response?.data?.message || "Invalid credentials. Please try again."
+      toast.error("Login failed", {
+        description: errorMessage,
+      })
+    },
+  })
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -27,13 +53,27 @@ export default function AdminLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
 
-    // Simulate loading for UI feedback
-    setTimeout(() => {
-      setIsLoading(false)
-      router.push("/dashboard")
-    }, 1000)
+    // Validate form
+    if (!formData.username || !formData.password) {
+      toast.error("Validation error", {
+        description: "Please enter both username and password",
+      })
+      return
+    }
+
+    if (formData.password.length < 6) {
+      toast.error("Validation error", {
+        description: "Password must be at least 6 characters long",
+      })
+      return
+    }
+
+    // Trigger login mutation
+    loginMutation.mutate({
+      username: formData.username,
+      password: formData.password,
+    })
   }
 
   return (
@@ -57,15 +97,15 @@ export default function AdminLoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="username">Username or Email</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  id="username"
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => handleInputChange("username", e.target.value)}
                   placeholder="admin@alphacom.com"
                   required
-                  disabled={isLoading}
+                  disabled={loginMutation.isPending}
                 />
               </div>
 
@@ -79,7 +119,8 @@ export default function AdminLoginPage() {
                     onChange={(e) => handleInputChange("password", e.target.value)}
                     placeholder="Enter your password"
                     required
-                    disabled={isLoading}
+                    disabled={loginMutation.isPending}
+                    minLength={6}
                   />
                   <Button
                     type="button"
@@ -87,11 +128,12 @@ export default function AdminLoginPage() {
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
-                    disabled={isLoading}
+                    disabled={loginMutation.isPending}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">Password must be at least 6 characters</p>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -99,15 +141,15 @@ export default function AdminLoginPage() {
                   id="rememberMe"
                   checked={formData.rememberMe}
                   onCheckedChange={(checked) => handleInputChange("rememberMe", checked)}
-                  disabled={isLoading}
+                  disabled={loginMutation.isPending}
                 />
                 <Label htmlFor="rememberMe" className="text-sm">
                   Remember me for 30 days
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
+              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </CardContent>
@@ -120,11 +162,9 @@ export default function AdminLoginPage() {
               <p className="text-sm font-medium text-muted-foreground">Demo Credentials</p>
               <div className="text-sm space-y-1">
                 <p>
-                  <strong>Email:</strong> admin@alphacom.com
-                </p>
+                  <strong>Email:</strong>superadmin@alphacom.com </p>
                 <p>
-                  <strong>Password:</strong> admin123
-                </p>
+                  <strong>Password:</strong>SuperAdmin123!@#</p>
               </div>
             </div>
           </CardContent>

@@ -14,15 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { useAppSelector, useAppDispatch } from "@/store/hooks"
-import { logout } from "@/store/slices/authSlice"
+import { logoutAdmin, getAdminInfo } from "@/lib/auth"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 export function AdminHeader() {
-  const { user } = useAppSelector((state) => state.auth)
-  const dispatch = useAppDispatch()
+  const [adminInfo, setAdminInfo] = useState<any>(null)
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [notifications] = useState([
@@ -31,24 +29,14 @@ export function AdminHeader() {
     { id: 3, title: "Product updated", message: "MacBook Pro price updated", time: "10 min ago", type: "success" },
   ])
 
-  const handleLogout = async () => {
-    try {
-      // TODO: Replace with your actual API endpoint
-      await fetch("https://your-api-domain.com/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      })
+  useEffect(() => {
+    setAdminInfo(getAdminInfo())
+  }, [])
 
-      dispatch(logout())
-      toast.success("Logged out successfully")
-      router.push("/login")
-    } catch (error) {
-      console.error("[v0] Logout error:", error)
-      // Still logout locally even if API call fails
-      dispatch(logout())
-      toast.success("Logged out successfully")
-      router.push("/login")
-    }
+  const handleLogout = () => {
+    logoutAdmin()
+    toast.success("Logged out successfully")
+    router.push("/login")
   }
 
   const handleSearch = (e: React.FormEvent) => {
@@ -110,16 +98,20 @@ export function AdminHeader() {
                 <User className="w-4 h-4 text-primary-foreground" />
               </div>
               <div className="text-left hidden sm:block">
-                <span className="text-sm font-medium">{user ? `${user.firstName} ${user.lastName}` : "Admin"}</span>
-                {user?.role && <div className="text-xs text-muted-foreground capitalize">{user.role}</div>}
+                <span className="text-sm font-medium">
+                  {adminInfo ? `${adminInfo.first_name} ${adminInfo.last_name}` : "Admin"}
+                </span>
+                {adminInfo?.department && <div className="text-xs text-muted-foreground">{adminInfo.department}</div>}
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div>
-                <p className="font-medium">{user ? `${user.firstName} ${user.lastName}` : "Admin User"}</p>
-                <p className="text-sm text-muted-foreground">{user?.email || "admin@alphacom.com"}</p>
+                <p className="font-medium">
+                  {adminInfo ? `${adminInfo.first_name} ${adminInfo.last_name}` : "Admin User"}
+                </p>
+                <p className="text-sm text-muted-foreground">{adminInfo?.email || "admin@alphacom.com"}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

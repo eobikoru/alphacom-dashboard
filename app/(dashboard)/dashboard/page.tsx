@@ -21,6 +21,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import Link from "next/link"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { useProducts } from "@/hooks/use-products"
+import Image from "next/image"
 
 const stats = [
   {
@@ -57,53 +59,38 @@ const stats = [
   },
 ]
 
-const recentProducts = [
-  {
-    id: 1,
-    name: "MacBook Pro 16-inch",
-    category: "Laptops",
-    price: "₦1,200,000",
-    stock: 5,
-    status: "active",
-    image: "/silver-macbook-on-desk.png",
-  },
-  {
-    id: 2,
-    name: "iPhone 15 Pro Max",
-    category: "Smartphones",
-    price: "₦850,000",
-    stock: 12,
-    status: "active",
-    image: "/modern-smartphone.png",
-  },
-  {
-    id: 3,
-    name: "Dell XPS 13",
-    category: "Laptops",
-    price: "₦650,000",
-    stock: 0,
-    status: "out_of_stock",
-    image: "/dell-laptop.png",
-  },
-  {
-    id: 4,
-    name: "AirPods Pro",
-    category: "Accessories",
-    price: "₦120,000",
-    stock: 25,
-    status: "active",
-    image: "/wireless-earbuds.png",
-  },
-]
-
 export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false)
 
+  const {
+    data: productsData,
+    isLoading,
+    refetch,
+  } = useProducts({
+    page: 1,
+    per_page: 4,
+    include_inactive: false,
+  })
+
   const handleRefresh = async () => {
-    // setRefreshing(true)
-    // // Simulate API call
-    // await new Promise((resolve) => setTimeout(resolve, 1000))
-    // setRefreshing(false)
+    setRefreshing(true)
+    await refetch()
+    setRefreshing(false)
+  }
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case "available":
+        return "default"
+      case "out_of_stock":
+        return "destructive"
+      case "coming_soon":
+        return "secondary"
+      case "discontinued":
+        return "outline"
+      default:
+        return "default"
+    }
   }
 
   return (
@@ -225,52 +212,79 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
-                >
-                  <div className="flex items-center space-x-4">
-                    <img
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
-                      className="w-12 h-12 rounded-lg object-cover"
-                    />
-                    <div>
-                      <h4 className="font-medium text-card-foreground">{product.name}</h4>
-                      <p className="text-sm text-muted-foreground">{product.category}</p>
+            {isLoading ? (
+              <div className="text-center py-8">
+                <RefreshCw className="w-8 h-8 text-muted-foreground mx-auto mb-2 animate-spin" />
+                <p className="text-sm text-muted-foreground">Loading products...</p>
+              </div>
+            ) : !productsData?.data || productsData.data.length === 0 ? (
+              <div className="text-center py-8">
+                <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No products found</p>
+                <Link href="/products/add">
+                  <Button size="sm" className="mt-4">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Product
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {productsData.data.map((product) => (
+                  <div
+                    key={product.id}
+                    className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Image
+                        src={product.images?.[0]?.url || "/placeholder.svg"}
+                        alt={product.name}
+                        width={48}
+                        height={48}
+                        className="w-12 h-12 rounded-lg object-cover"
+                      />
+                      <div>
+                        <h4 className="font-medium text-card-foreground">{product.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {product.brand && `${product.brand} • `}
+                          {product.category_name || "Uncategorized"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <p className="font-medium text-card-foreground">₦{Number(product.price).toLocaleString()}</p>
+                        <p className="text-sm text-muted-foreground">Stock: {product.stock_available}</p>
+                      </div>
+                      <Badge variant={getStatusVariant(product.status)} className="capitalize">
+                        {product.status.replace("_", " ")}
+                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/products/${product.id}`}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              View
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/products/${product.id}/edit`}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="font-medium text-card-foreground">{product.price}</p>
-                      <p className="text-sm text-muted-foreground">Stock: {product.stock}</p>
-                    </div>
-                    <Badge variant={product.status === "active" ? "default" : "destructive"} className="capitalize">
-                      {product.status.replace("_", " ")}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="w-4 h-4 mr-2" />
-                          View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

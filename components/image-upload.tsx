@@ -10,8 +10,8 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 interface ImageUploadProps {
-  images: string[]
-  onImagesChange: (images: string[]) => void
+  images: File[]
+  onImagesChange: (images: File[]) => void
   maxImages?: number
   maxSize?: number // in MB
 }
@@ -29,7 +29,7 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10, maxSize = 
       setUploading(true)
 
       try {
-        const newImages: string[] = []
+        const newImages: File[] = []
 
         for (const file of acceptedFiles) {
           if (file.size > maxSize * 1024 * 1024) {
@@ -37,18 +37,14 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10, maxSize = 
             continue
           }
 
-          // Create a preview URL for the image
-          const previewUrl = URL.createObjectURL(file)
-          newImages.push(previewUrl)
-
-          // In a real app, you would upload to your storage service here
-          console.log("[v0] Uploading file:", file.name)
+          newImages.push(file)
+          console.log("[v0] File added:", file.name)
         }
 
         onImagesChange([...images, ...newImages])
-        toast.success(`${newImages.length} image(s) uploaded successfully`)
+        toast.success(`${newImages.length} image(s) added successfully`)
       } catch (error) {
-        toast.error("Failed to upload images")
+        toast.error("Failed to add images")
         console.error("[v0] Upload error:", error)
       } finally {
         setUploading(false)
@@ -108,11 +104,11 @@ export function ImageUpload({ images, onImagesChange, maxImages = 10, maxSize = 
       {/* Image Preview Grid */}
       {images.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {images.map((image, index) => (
+          {images.map((file, index) => (
             <div key={index} className="relative group">
               <div className="aspect-square rounded-lg overflow-hidden bg-muted">
                 <img
-                  src={image || "/placeholder.svg"}
+                  src={URL.createObjectURL(file) || "/placeholder.svg"}
                   alt={`Product image ${index + 1}`}
                   className="w-full h-full object-cover"
                 />

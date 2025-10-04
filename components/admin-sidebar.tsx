@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Plus,
   PackagePlus,
+  FolderTree,
 } from "lucide-react"
 
 const navigation = [
@@ -47,6 +48,12 @@ const navigation = [
     name: "Bulk Upload",
     href: "/products/bulk",
     icon: PackagePlus,
+    current: false,
+  },
+  {
+    name: "Categories",
+    href: "/categories",
+    icon: FolderTree,
     current: false,
   },
   {
