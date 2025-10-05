@@ -26,11 +26,12 @@ import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useProducts, useProductStats, useDownloadBulkTemplate, useDeleteProduct } from "@/hooks/use-products"
 import { ProductDetailModal } from "@/components/product-detail-modal"
+import { Pagination } from "@/components/pagination"
 
 export default function ProductsPage() {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [page, setPage] = useState(1)
-  const [perPage] = useState(20)
+  const [perPage] = useState(5)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all_status")
   const [categoryFilter, setCategoryFilter] = useState<string>("")
@@ -426,28 +427,13 @@ export default function ProductsPage() {
 
           {/* Pagination */}
           {productsData && productsData.total > perPage && (
-            <div className="flex items-center justify-between mt-6">
-              <p className="text-sm text-muted-foreground">
-                Showing {(page - 1) * perPage + 1} to {Math.min(page * perPage, productsData.total)} of{" "}
-                {productsData.total} products
-              </p>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 1}>
-                  Previous
-                </Button>
-                <span className="text-sm">
-                  Page {page} of {productsData.pages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === productsData.pages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+            <Pagination
+              currentPage={page}
+              totalPages={productsData.pages}
+              totalItems={productsData.total}
+              itemsPerPage={perPage}
+              onPageChange={setPage}
+            />
           )}
         </CardContent>
       </Card>

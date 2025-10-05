@@ -35,7 +35,7 @@ export const useCreateAdmin = () => {
       toast.success("Admin created successfully")
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to create admin")
+      toast.error(error.response?.data?.detail || "Failed to create admin")
     },
   })
 }
@@ -50,7 +50,7 @@ export const useUpdateAdminRole = () => {
       toast.success("Admin role updated successfully")
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update admin role")
+      toast.error(error.response?.data?.detail || "Failed to update admin role")
     },
   })
 }
@@ -65,7 +65,7 @@ export const useDeactivateAdmin = () => {
       toast.success("Admin deactivated successfully")
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to deactivate admin")
+      toast.error(error.response?.data?.detail || "Failed to deactivate admin")
     },
   })
 }
@@ -81,7 +81,7 @@ export const useReactivateAdmin = () => {
       toast.success("Admin reactivated successfully")
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to reactivate admin")
+      toast.error(error.response?.data?.detail || "Failed to reactivate admin")
     },
   })
 }

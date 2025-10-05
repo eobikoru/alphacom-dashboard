@@ -5,14 +5,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Search, Eye, Ban, CheckCircle, RefreshCw, ShieldAlert } from "lucide-react"
 import { useUsers, useUser, useUpdateUserStatus } from "@/hooks/use-users"
 import { getAdminInfo } from "@/lib/auth"
+import { Pagination } from "@/components/pagination"
 
 export default function CustomersPage() {
   const [page, setPage] = useState(1)
+  const [perPage] = useState(5)
   const [search, setSearch] = useState("")
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
@@ -24,7 +25,7 @@ export default function CustomersPage() {
 
   const { data: usersData, isLoading } = useUsers({
     page,
-    per_page: 20,
+    per_page: perPage,
     search: search || undefined,
     is_admin: false,
   })
@@ -95,77 +96,62 @@ export default function CustomersPage() {
               <p className="text-sm text-muted-foreground">Loading customers...</p>
             </div>
           ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Username</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {usersData?.items.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.username}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={user.is_active ? "default" : "destructive"}>
-                          {user.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end space-x-2">
-                          <Button variant="ghost" size="sm" onClick={() => setSelectedUserId(user.id)}>
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleStatusToggle(user.id, user.is_active)}
-                            disabled={!isSuperAdmin}
-                          >
-                            {user.is_active ? (
-                              <Ban className="w-4 h-4 text-destructive" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4 text-green-500" />
-                            )}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="space-y-4">
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr className="border-b">
+                      <th className="px-4 py-3 text-left text-sm font-medium">Username</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Joined</th>
+                      <th className="px-4 py-3 text-right text-sm font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usersData?.items.map((user) => (
+                      <tr key={user.id} className="border-b hover:bg-muted/50">
+                        <td className="px-4 py-3 font-medium">{user.username}</td>
+                        <td className="px-4 py-3">{user.email}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant={user.is_active ? "default" : "destructive"}>
+                            {user.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">{new Date(user.created_at).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedUserId(user.id)}>
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleStatusToggle(user.id, user.is_active)}
+                              disabled={!isSuperAdmin}
+                            >
+                              {user.is_active ? (
+                                <Ban className="w-4 h-4 text-destructive" />
+                              ) : (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              )}
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-              {usersData && usersData.pages > 1 && (
-                <div className="flex items-center justify-between mt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Showing {(page - 1) * usersData.per_page + 1} to{" "}
-                    {Math.min(page * usersData.per_page, usersData.total)} of {usersData.total} customers
-                  </p>
-                  <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 1}>
-                      Previous
-                    </Button>
-                    <span className="text-sm">
-                      Page {page} of {usersData.pages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage(page + 1)}
-                      disabled={page === usersData.pages}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
+              <Pagination
+                currentPage={page}
+                totalPages={usersData?.pages || 1}
+                totalItems={usersData?.total || 0}
+                itemsPerPage={perPage}
+                onPageChange={setPage}
+              />
+            </div>
           )}
         </CardContent>
       </Card>

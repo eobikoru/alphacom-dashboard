@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import {
   getCategories,
   getCategoryTree,
@@ -96,17 +97,10 @@ export const useCreateCategory = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
       queryClient.invalidateQueries({ queryKey: categoryKeys.tree() })
-      toast({
-        title: "Success",
-        description: "Category created successfully",
-      })
+      toast.success("Category created successfully")
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to create category",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.detail || "Failed to create category")
     },
   })
 }
@@ -122,17 +116,10 @@ export const useUpdateCategory = () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
       queryClient.invalidateQueries({ queryKey: categoryKeys.tree() })
       queryClient.invalidateQueries({ queryKey: categoryKeys.detail(variables.categoryId) })
-      toast({
-        title: "Success",
-        description: "Category updated successfully",
-      })
+      toast.success("Category updated successfully")
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update category",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.detail || "Failed to update category")
     },
   })
 }
@@ -146,17 +133,10 @@ export const useDeleteCategory = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
       queryClient.invalidateQueries({ queryKey: categoryKeys.tree() })
-      toast({
-        title: "Success",
-        description: "Category deleted successfully",
-      })
+      toast.success("Category deleted successfully")
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete category",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.detail || "Failed to delete category")
     },
   })
 }
@@ -170,17 +150,10 @@ export const useUploadCategoryImage = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.detail(variables.categoryId) })
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
-      toast({
-        title: "Success",
-        description: "Image uploaded successfully",
-      })
+      toast.success("Image uploaded successfully")
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to upload image",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.detail || "Failed to upload image")
     },
   })
 }
@@ -196,17 +169,10 @@ export const useCreateSubcategory = () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.subcategories(variables.parentId) })
       queryClient.invalidateQueries({ queryKey: categoryKeys.tree() })
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
-      toast({
-        title: "Success",
-        description: "Subcategory created successfully",
-      })
+      toast.success("Subcategory created successfully")
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to create subcategory",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.detail || "Failed to create subcategory")
     },
   })
 }
@@ -222,17 +188,10 @@ export const useUpdateSubcategory = () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.detail(variables.subcategoryId) })
       queryClient.invalidateQueries({ queryKey: categoryKeys.tree() })
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
-      toast({
-        title: "Success",
-        description: "Subcategory updated successfully",
-      })
+      toast.success("Subcategory updated successfully")
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to update subcategory",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.detail || "Failed to update subcategory")
     },
   })
 }
@@ -246,17 +205,10 @@ export const useDeleteSubcategory = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.tree() })
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
-      toast({
-        title: "Success",
-        description: "Subcategory deleted successfully",
-      })
+      toast.success("Subcategory deleted successfully")
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete subcategory",
-        variant: "destructive",
-      })
+      toast.error(error.response?.data?.detail || "Failed to delete subcategory")
     },
   })
 }

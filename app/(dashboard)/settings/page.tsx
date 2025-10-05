@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
   DialogContent,
@@ -26,6 +25,7 @@ import {
 } from "@/hooks/use-admins"
 import type { Admin } from "@/types/admin"
 import { getAdminInfo } from "@/lib/auth"
+import { Pagination } from "@/components/pagination"
 
 export default function SettingsPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
@@ -45,15 +45,21 @@ export default function SettingsPage() {
 
   const [deactivateReason, setDeactivateReason] = useState("")
 
+  const [page, setPage] = useState(1)
+  const [perPage] = useState(5)
+
   useEffect(() => {
     const adminInfo = getAdminInfo()
     setIsSuperAdmin(adminInfo?.is_super_admin || false)
   }, [])
 
-  const { data: admins, isLoading } = useAdmins({
+  const { data: adminsData, isLoading } = useAdmins({
     include_deactivated: includeDeactivated,
     include_self: true,
   })
+
+  const paginatedAdmins = adminsData ? adminsData.slice((page - 1) * perPage, page * perPage) : []
+  const totalPages = adminsData ? Math.ceil(adminsData.length / perPage) : 0
 
   const createAdmin = useCreateAdmin()
   const updateRole = useUpdateAdminRole()
@@ -177,88 +183,103 @@ export default function SettingsPage() {
               <p className="text-sm text-muted-foreground">Loading admins...</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {admins?.map((admin) => (
-                  <TableRow key={admin.id}>
-                    <TableCell className="font-medium">{admin.username}</TableCell>
-                    <TableCell>{admin.email}</TableCell>
-                    <TableCell>{admin.department}</TableCell>
-                    <TableCell>
-                      <Badge variant={admin.is_super_admin ? "default" : "secondary"}>
-                        {admin.is_super_admin ? (
-                          <>
-                            <ShieldCheck className="w-3 h-3 mr-1" />
-                            Super Admin
-                          </>
-                        ) : (
-                          <>
-                            <Shield className="w-3 h-3 mr-1" />
-                            Admin
-                          </>
-                        )}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={admin.is_active ? "default" : "destructive"}>
-                        {admin.is_active ? "Active" : "Deactivated"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{new Date(admin.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        {admin.is_active ? (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedAdmin(admin)
-                                setShowRoleDialog(true)
-                              }}
-                              disabled={!isSuperAdmin}
-                            >
-                              <Shield className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedAdmin(admin)
-                                setShowDeactivateDialog(true)
-                              }}
-                              disabled={!isSuperAdmin}
-                            >
-                              <Ban className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleReactivate(admin.id, admin.is_super_admin)}
-                            disabled={!isSuperAdmin}
-                          >
-                            <CheckCircle className="w-4 h-4 text-green-500" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="space-y-4">
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr className="border-b">
+                      <th className="px-4 py-3 text-left text-sm font-medium">Username</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Department</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Role</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Created</th>
+                      <th className="px-4 py-3 text-right text-sm font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedAdmins?.map((admin) => (
+                      <tr key={admin.id} className="border-b hover:bg-muted/50">
+                        <td className="px-4 py-3 font-medium">{admin.username}</td>
+                        <td className="px-4 py-3">{admin.email}</td>
+                        <td className="px-4 py-3">{admin.department}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant={admin.is_super_admin ? "default" : "secondary"}>
+                            {admin.is_super_admin ? (
+                              <>
+                                <ShieldCheck className="w-3 h-3 mr-1" />
+                                Super Admin
+                              </>
+                            ) : (
+                              <>
+                                <Shield className="w-3 h-3 mr-1" />
+                                Admin
+                              </>
+                            )}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={admin.is_active ? "default" : "destructive"}>
+                            {admin.is_active ? "Active" : "Deactivated"}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">{new Date(admin.created_at).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end space-x-2">
+                            {admin.is_active ? (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedAdmin(admin)
+                                    setShowRoleDialog(true)
+                                  }}
+                                  disabled={!isSuperAdmin}
+                                >
+                                  <Shield className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedAdmin(admin)
+                                    setShowDeactivateDialog(true)
+                                  }}
+                                  disabled={!isSuperAdmin}
+                                >
+                                  <Ban className="w-4 h-4 text-destructive" />
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleReactivate(admin.id, admin.is_super_admin)}
+                                disabled={!isSuperAdmin}
+                              >
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="h-[23rem] ">
+
+                <Pagination
+                currentPage={page}
+                totalPages={totalPages || 1}
+                totalItems={adminsData?.length || 0}
+                itemsPerPage={perPage}
+                onPageChange={setPage}
+              /> 
+              </div>
+             
+            </div>
           )}
         </CardContent>
       </Card>

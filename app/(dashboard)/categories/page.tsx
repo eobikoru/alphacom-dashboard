@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -42,6 +42,7 @@ import {
 import type { Category, CreateCategoryData, CreateSubcategoryData, CategoryTree } from "@/types/category"
 import Image from "next/image"
 import { CategoryImageUploadModal } from "@/components/category-image-upload-modal"
+import { Pagination } from "@/components/pagination"
 
 export default function CategoriesPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -58,7 +59,7 @@ export default function CategoriesPage() {
   const [activeTab, setActiveTab] = useState("list")
 
   // Queries
-  const { data: categoriesData, isLoading } = useCategories({ page, per_page: 20 })
+  const { data: categoriesData, isLoading } = useCategories({ page, per_page: 5 })
   const { data: treeData } = useCategoryTree()
   const { data: categoryDetail } = useCategory(selectedCategory?.id || "")
   const { data: subcategories } = useSubcategories(selectedParentId)
@@ -205,146 +206,147 @@ export default function CategoriesPage() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Level</TableHead>
-                  <TableHead>Products</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Featured</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      Loading categories...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredCategories && filteredCategories.length > 0 ? (
-                  filteredCategories.map((category) => (
-                    <TableRow key={category.id}>
-                      <TableCell>
-                        {category.image_url ? (
-                          <Image
-                            src={category.image_url || "/placeholder.svg"}
-                            alt={category.name}
-                            width={40}
-                            height={40}
-                            className="rounded object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
-                            <Package className="w-5 h-5 text-muted-foreground" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{category.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">Level {category.level}</Badge>
-                      </TableCell>
-                      <TableCell>{category.product_count}</TableCell>
-                      <TableCell>
-                        <Badge variant={category.is_active ? "default" : "secondary"}>
-                          {category.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{category.is_featured && <Badge variant="secondary">Featured</Badge>}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCategory(category)
-                              setShowViewDialog(true)
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => openEditDialog(category)}>
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCategory(category)
-                              setShowImageUploadModal(true)
-                            }}
-                          >
-                            <Upload className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedParentId(category.id)
-                              setShowAddSubcategoryDialog(true)
-                            }}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCategory(category)
-                              setShowProductsDialog(true)
-                            }}
-                          >
-                            <Package className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedCategory(category)
-                              setShowDeleteDialog(true)
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No categories found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          {/* Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Categories ({categoriesData?.total || 0})</CardTitle>
+              <CardDescription>A list of all product categories</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Table */}
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-muted/50">
+                      <tr className="border-b">
+                        <th className="px-4 py-3 text-left text-sm font-medium">Image</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Name</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Level</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Products</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Featured</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                            Loading categories...
+                          </td>
+                        </tr>
+                      ) : filteredCategories && filteredCategories.length > 0 ? (
+                        filteredCategories.map((category) => (
+                          <tr key={category.id} className="border-b hover:bg-muted/50">
+                            <td className="px-4 py-3">
+                              {category.image_url ? (
+                                <Image
+                                  src={category.image_url || "/placeholder.svg"}
+                                  alt={category.name}
+                                  width={40}
+                                  height={40}
+                                  className="rounded object-cover"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                                  <Package className="w-5 h-5 text-muted-foreground" />
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 font-medium">{category.name}</td>
+                            <td className="px-4 py-3">
+                              <Badge variant="outline">Level {category.level}</Badge>
+                            </td>
+                            <td className="px-4 py-3">{category.product_count}</td>
+                            <td className="px-4 py-3">
+                              <Badge variant={category.is_active ? "default" : "secondary"}>
+                                {category.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3">
+                              {category.is_featured && <Badge variant="secondary">Featured</Badge>}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedCategory(category)
+                                    setShowViewDialog(true)
+                                  }}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => openEditDialog(category)}>
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedCategory(category)
+                                    setShowImageUploadModal(true)
+                                  }}
+                                >
+                                  <Upload className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedParentId(category.id)
+                                    setShowAddSubcategoryDialog(true)
+                                  }}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedCategory(category)
+                                    setShowProductsDialog(true)
+                                  }}
+                                >
+                                  <Package className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedCategory(category)
+                                    setShowDeleteDialog(true)
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                            No categories found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
 
-          {/* Pagination */}
-          {categoriesData && categoriesData.pages > 1 && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Page {page} of {categoriesData.pages} ({categoriesData.total} total categories)
-              </p>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage((p) => Math.min(categoriesData.pages, p + 1))}
-                  disabled={page === categoriesData.pages}
-                >
-                  Next
-                </Button>
+                {/* Pagination */}
+                <Pagination
+                  currentPage={page}
+                  totalPages={categoriesData?.pages || 1}
+                  totalItems={categoriesData?.total || 0}
+                  itemsPerPage={5}
+                  onPageChange={setPage}
+                />
               </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="tree" className="space-y-4">

@@ -59,7 +59,7 @@ export const useCreateProduct = () => {
       toast.success("Product created successfully")
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to create product")
+      toast.error(error.response?.data?.detail || "Failed to create product")
     },
   })
 }
@@ -80,7 +80,7 @@ export const useDownloadBulkTemplate = () => {
       toast.success("Template downloaded successfully")
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to download template")
+      toast.error(error.response?.data?.detail || "Failed to download template")
     },
   })
 }
@@ -97,7 +97,7 @@ export const useBulkUploadProducts = () => {
       toast.success("Products uploaded successfully")
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to upload products")
+      toast.error(error.response?.data?.detail || "Failed to upload products")
     },
   })
 }
@@ -114,7 +114,7 @@ export const useDeleteProduct = () => {
       toast.success("Product deleted successfully")
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to delete product")
+      toast.error(error.response?.data?.detail || "Failed to delete product")
     },
   })
 }
@@ -132,7 +132,7 @@ export const useUpdateProduct = (productId: string) => {
       toast.success("Product updated successfully")
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update product")
+      toast.error(error.response?.data?.detail || "Failed to update product")
     },
   })
 }

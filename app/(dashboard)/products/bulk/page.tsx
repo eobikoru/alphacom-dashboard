@@ -124,15 +124,18 @@ export default function BulkUploadPage() {
   }
 
   const downloadTemplate = () => {
-    // In a real app, this would download a CSV template
-    const csvContent = `name,sku,category,brand,price,comparePrice,stock,description,tags\nMacBook Pro 16-inch,MBP-16-001,Laptops,Apple,1200000,1300000,5,"High-performance laptop","laptop,apple,pro"\niPhone 15 Pro,IP15-PRO-001,Smartphones,Apple,850000,900000,12,"Latest iPhone model","smartphone,apple,5g"`
+    const csvContent = `name,sku,category,brand,price,comparePrice,stock,description,tags
+MacBook Pro 16-inch,MBP-16-001,Laptops,Apple,1200000,1300000,5,"High-performance laptop","laptop,apple,pro"
+iPhone 15 Pro,IP15-PRO-001,Smartphones,Apple,850000,900000,12,"Latest iPhone model","smartphone,apple,5g"`
 
     const blob = new Blob([csvContent], { type: "text/csv" })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "product-template.csv"
+    a.download = "product-import-template.csv"
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
 
     toast.success("Template downloaded successfully!")
@@ -161,14 +164,14 @@ export default function BulkUploadPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-foreground">Bulk Product Upload</h1>
-            <p className="text-muted-foreground">Import multiple products from CSV or Excel files</p>
+            <p className="text-muted-foreground">Import multiple products from  Excel files</p>
           </div>
         </div>
         <div className="flex items-center space-x-3">
-          <Button variant="outline" onClick={downloadTemplate} className="flex items-center space-x-2 bg-transparent">
+          {/* <Button variant="outline" onClick={downloadTemplate} className="flex items-center space-x-2 bg-transparent">
             <Download className="w-4 h-4" />
             <span>Download Template</span>
-          </Button>
+          </Button> */}
           {currentStep !== "upload" && (
             <Button variant="outline" onClick={resetUpload} className="flex items-center space-x-2 bg-transparent">
               <RefreshCw className="w-4 h-4" />
@@ -285,18 +288,18 @@ export default function BulkUploadPage() {
                     <strong>Maximum file size:</strong> 10MB
                   </p>
                   <p>
-                    <strong>Maximum products:</strong> 1,000 per file
+                    <strong>Maximum products:</strong> 150 per file
                   </p>
                 </div>
                 <Separator />
                 <div className="text-sm space-y-2">
-                  <p className="font-medium">Required columns:</p>
+                  {/* <p className="font-medium">Required columns:</p> */}
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>name</li>
+                    {/* <li>name</li>
                     <li>sku</li>
                     <li>category</li>
                     <li>price</li>
-                    <li>stock</li>
+                    <li>stock</li> */}
                   </ul>
                 </div>
               </CardContent>

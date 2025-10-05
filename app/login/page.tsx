@@ -39,8 +39,7 @@ export default function AdminLoginPage() {
       router.push("/dashboard")
     },
     onError: (error: any) => {
-      // Handle login error
-      const errorMessage = error.response?.data?.message || "Invalid credentials. Please try again."
+      const errorMessage = error.response?.data?.detail || "Invalid credentials. Please try again."
       toast.error("Login failed", {
         description: errorMessage,
       })
@@ -162,9 +161,11 @@ export default function AdminLoginPage() {
               <p className="text-sm font-medium text-muted-foreground">Demo Credentials</p>
               <div className="text-sm space-y-1">
                 <p>
-                  <strong>Email:</strong>superadmin@alphacom.com </p>
+                  <strong>Email:</strong> superadmin@alphacom.com
+                </p>
                 <p>
-                  <strong>Password:</strong>SuperAdmin123!@#</p>
+                  <strong>Password:</strong> SuperAdmin123!@#
+                </p>
               </div>
             </div>
           </CardContent>

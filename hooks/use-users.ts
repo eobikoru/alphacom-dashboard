@@ -28,7 +28,7 @@ export const useUpdateUserStatus = () => {
       toast.success("User status updated successfully")
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update user status")
+      toast.error(error.response?.data?.detail || "Failed to update user status")
     },
   })
 }
