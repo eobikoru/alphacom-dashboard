@@ -16,61 +16,20 @@ import {
   RefreshCw,
   TrendingDown,
   BarChart3,
+  AlertTriangle,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { useProducts } from "@/hooks/use-products"
+import { useDashboardStats, useLowStockProducts } from "@/hooks/use-dashboard"
 import Image from "next/image"
-
-const stats = [
-  {
-    title: "Total Products",
-    value: "124",
-    change: "+12%",
-    changeType: "positive" as const,
-    icon: Package,
-    description: "Active products in catalog",
-  },
-  {
-    title: "Orders Today",
-    value: "23",
-    change: "+5%",
-    changeType: "positive" as const,
-    icon: ShoppingCart,
-    description: "New orders received",
-  },
-  {
-    title: "Total Customers",
-    value: "1,429",
-    change: "+18%",
-    changeType: "positive" as const,
-    icon: Users,
-    description: "Registered customers",
-  },
-  {
-    title: "Revenue",
-    value: "₦2.4M",
-    change: "+23%",
-    changeType: "positive" as const,
-    icon: TrendingUp,
-    description: "This month's revenue",
-  },
-]
 
 export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false)
 
-  const {
-    data: productsData,
-    isLoading,
-    refetch,
-  } = useProducts({
-    page: 1,
-    per_page: 4,
-    include_inactive: false,
-  })
+  const { data: stats, isLoading, refetch } = useDashboardStats()
+  const { data: lowStockProducts } = useLowStockProducts(5)
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -80,7 +39,7 @@ export default function AdminDashboard() {
 
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case "available":
+      case "active":
         return "default"
       case "out_of_stock":
         return "destructive"
@@ -92,6 +51,43 @@ export default function AdminDashboard() {
         return "default"
     }
   }
+
+  const statsCards = stats
+    ? [
+        {
+          title: "Total Products",
+          value: stats.total_products.toString(),
+          change: `${stats.products_change_percent > 0 ? "+" : ""}${stats.products_change_percent}%`,
+          changeType: stats.products_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
+          icon: Package,
+          description: "Active products in catalog",
+        },
+        {
+          title: "Orders Today",
+          value: stats.orders_today.toString(),
+          change: `${stats.orders_change_percent > 0 ? "+" : ""}${stats.orders_change_percent}%`,
+          changeType: stats.orders_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
+          icon: ShoppingCart,
+          description: "New orders received",
+        },
+        {
+          title: "Total Customers",
+          value: stats.total_customers.toString(),
+          change: `${stats.customers_change_percent > 0 ? "+" : ""}${stats.customers_change_percent}%`,
+          changeType: stats.customers_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
+          icon: Users,
+          description: "Registered customers",
+        },
+        {
+          title: "Revenue",
+          value: `₦${(stats.revenue_this_month / 1000).toFixed(1)}K`,
+          change: `${stats.revenue_change_percent > 0 ? "+" : ""}${stats.revenue_change_percent}%`,
+          changeType: stats.revenue_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
+          icon: TrendingUp,
+          description: "This month's revenue",
+        },
+      ]
+    : []
 
   return (
     <div className="space-y-6">
@@ -129,39 +125,52 @@ export default function AdminDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="bg-card border-border hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-card-foreground">{stat.title}</CardTitle>
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <stat.icon className="h-4 w-4 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-card-foreground">{stat.value}</div>
-              <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                <span
-                  className={cn(
-                    "flex items-center",
-                    stat.changeType === "positive" ? "text-green-500" : "text-red-500",
-                  )}
-                >
-                  {stat.changeType === "positive" ? (
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                  ) : (
-                    <TrendingDown className="w-3 h-3 mr-1" />
-                  )}
-                  {stat.change}
-                </span>
-                <span>from last month</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-            </CardContent>
-          </Card>
-        ))}
+        {isLoading
+          ? [...Array(4)].map((_, i) => (
+              <Card key={i} className="bg-card border-border">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                  <div className="h-8 w-8 bg-muted animate-pulse rounded-lg" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-8 w-16 bg-muted animate-pulse rounded mb-2" />
+                  <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+                </CardContent>
+              </Card>
+            ))
+          : statsCards.map((stat) => (
+              <Card key={stat.title} className="bg-card border-border hover:shadow-md transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-card-foreground">{stat.title}</CardTitle>
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <stat.icon className="h-4 w-4 text-primary" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-card-foreground">{stat.value}</div>
+                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                    <span
+                      className={cn(
+                        "flex items-center",
+                        stat.changeType === "positive" ? "text-green-500" : "text-red-500",
+                      )}
+                    >
+                      {stat.changeType === "positive" ? (
+                        <TrendingUp className="w-3 h-3 mr-1" />
+                      ) : (
+                        <TrendingDown className="w-3 h-3 mr-1" />
+                      )}
+                      {stat.change}
+                    </span>
+                    <span>from last month</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+                </CardContent>
+              </Card>
+            ))}
       </div>
 
-      {/* Quick Actions Section */}
+      {/* Quick Actions and Recent Products */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="bg-card border-border">
           <CardHeader>
@@ -217,7 +226,7 @@ export default function AdminDashboard() {
                 <RefreshCw className="w-8 h-8 text-muted-foreground mx-auto mb-2 animate-spin" />
                 <p className="text-sm text-muted-foreground">Loading products...</p>
               </div>
-            ) : !productsData?.data || productsData.data.length === 0 ? (
+            ) : !stats?.recent_products || stats.recent_products.length === 0 ? (
               <div className="text-center py-8">
                 <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">No products found</p>
@@ -230,14 +239,14 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {productsData.data.map((product) => (
+                {stats.recent_products.map((product) => (
                   <div
                     key={product.id}
                     className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
                   >
                     <div className="flex items-center space-x-4">
                       <Image
-                        src={product.images?.[0]?.url || "/placeholder.svg"}
+                        src={product.image_url || "/placeholder.svg"}
                         alt={product.name}
                         width={48}
                         height={48}
@@ -245,16 +254,13 @@ export default function AdminDashboard() {
                       />
                       <div>
                         <h4 className="font-medium text-card-foreground">{product.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {product.brand && `${product.brand} • `}
-                          {product.category_name || "Uncategorized"}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{product.category}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
                       <div className="text-right">
                         <p className="font-medium text-card-foreground">₦{Number(product.price).toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">Stock: {product.stock_available}</p>
+                        <p className="text-sm text-muted-foreground">Stock: {product.stock}</p>
                       </div>
                       <Badge variant={getStatusVariant(product.status)} className="capitalize">
                         {product.status.replace("_", " ")}
@@ -288,6 +294,40 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Low Stock Alert */}
+      {lowStockProducts && lowStockProducts.length > 0 && (
+        <Card className="bg-card border-border border-orange-500/50">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="w-5 h-5 text-orange-500" />
+              <CardTitle className="text-card-foreground">Low Stock Alert</CardTitle>
+            </div>
+            <CardDescription>Products running low on inventory</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {lowStockProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20"
+                >
+                  <div>
+                    <h4 className="font-medium text-card-foreground">{product.name}</h4>
+                    <p className="text-sm text-muted-foreground">{product.category_name}</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant="destructive">
+                      {product.stock_available} / {product.low_stock_threshold}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground mt-1">Stock remaining</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
