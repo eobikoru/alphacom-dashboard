@@ -65,7 +65,7 @@ export default function EditProductPage() {
       // Find the parent category for the subcategory
       if (product.category_id && categoriesData) {
         const parentCategory = categoriesData.data.find((cat) =>
-          cat.subcategories?.some((sub) => sub.id === product.category_id),
+          cat.subcategories?.some((sub: { id: string }) => sub.id === product.category_id),
         )
         if (parentCategory) {
           setSelectedCategoryId(parentCategory.id)

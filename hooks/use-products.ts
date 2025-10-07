@@ -68,11 +68,11 @@ export const useCreateProduct = () => {
 export const useDownloadBulkTemplate = () => {
   return useMutation({
     mutationFn: downloadBulkTemplate,
-    onSuccess: (blob) => {
+    onSuccess: ({ blob, filename }) => {
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.href = url
-      link.download = "product_bulk_upload_template.csv"
+      link.download = filename
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)

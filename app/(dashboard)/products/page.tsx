@@ -157,7 +157,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="hover:shadow-md transition-shadow">
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2">
@@ -181,6 +181,34 @@ export default function ProductsPage() {
               <div>
                 <p className="text-2xl font-bold text-green-600">{stats?.active_products || 0}</p>
                 <p className="text-sm text-muted-foreground">Active</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Package className="w-4 h-4 text-gray-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-600">{stats?.inactive_products || 0}</p>
+                <p className="text-sm text-muted-foreground">Inactive</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center space-x-2">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Package className="w-4 h-4 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-purple-600">{stats?.featured_products || 0}</p>
+                <p className="text-sm text-muted-foreground">Featured</p>
               </div>
             </div>
           </CardContent>

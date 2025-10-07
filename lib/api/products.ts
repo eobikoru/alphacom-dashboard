@@ -24,11 +24,23 @@ export const createProduct = async (formData: FormData): Promise<ProductDetailRe
 }
 
 // Download bulk upload template
-export const downloadBulkTemplate = async (): Promise<Blob> => {
-  const { data } = await api.get("/api/v1/admin/products/bulk/template", {
+export const downloadBulkTemplate = async (): Promise<{ blob: Blob; filename: string }> => {
+  const response = await api.get("/api/v1/admin/products/bulk/template", {
     responseType: "blob",
   })
-  return data
+
+  // Extract filename from Content-Disposition header
+  const contentDisposition = response.headers["content-disposition"]
+  let filename = "template.xlsx" // fallback filename
+
+  if (contentDisposition) {
+    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+    if (filenameMatch && filenameMatch[1]) {
+      filename = filenameMatch[1].replace(/['"]/g, "")
+    }
+  }
+
+  return { blob: response.data, filename }
 }
 
 // Get product statistics
@@ -57,10 +69,16 @@ export const deleteProduct = async (productId: string): Promise<void> => {
 
 // Update a product
 export const updateProduct = async (productId: string, formData: FormData): Promise<ProductDetailResponse> => {
-  const { data } = await api.put(`/api/v1/admin/products/${productId}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  })
+  console.log("[v0] Updating product with ID:", productId)
+  console.log("[v0] FormData entries:")
+  for (const [key, value] of formData.entries()) {
+    if (value instanceof File) {
+      console.log(`[v0] ${key}:`, value.name, value.type, value.size)
+    } else {
+      console.log(`[v0] ${key}:`, value)
+    }
+  }
+
+  const { data } = await api.put(`/api/v1/admin/products/${productId}`, formData)
   return data
 }

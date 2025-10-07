@@ -2,18 +2,12 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle, XCircle, AlertTriangle, ChevronDown, ChevronRight } from "lucide-react"
 import { useState } from "react"
 
 interface Product {
-  id: string
-  name: string
-  sku: string
-  category: string
-  price: number
-  stock: number
+  [key: string]: any // Dynamic columns
   status: "valid" | "warning" | "error"
   errors: string[]
   warnings: string[]
@@ -21,13 +15,15 @@ interface Product {
 
 interface DataPreviewTableProps {
   data: Product[]
+  headers: string[]
 }
 
-export function DataPreviewTable({ data }: DataPreviewTableProps) {
+export function DataPreviewTable({ data, headers }: DataPreviewTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
-  const toggleRow = (id: string) => {
+  const toggleRow = (index: number) => {
     const newExpanded = new Set(expandedRows)
+    const id = index.toString()
     if (newExpanded.has(id)) {
       newExpanded.delete(id)
     } else {
@@ -64,62 +60,61 @@ export function DataPreviewTable({ data }: DataPreviewTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10"></TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Product Name</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Price (₦)</TableHead>
-              <TableHead>Stock</TableHead>
-              <TableHead>Issues</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((product) => (
+      <div className="rounded-md border overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b bg-muted/50">
+              <th className="p-3 text-left font-medium text-sm w-10"></th>
+              <th className="p-3 text-left font-medium text-sm">Status</th>
+              {headers.map((header, index) => (
+                <th key={index} className="p-3 text-left font-medium text-sm whitespace-nowrap">
+                  {header}
+                </th>
+              ))}
+              <th className="p-3 text-left font-medium text-sm">Issues</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((product, rowIndex) => (
               <>
-                <TableRow
-                  key={product.id}
-                  className={
+                <tr
+                  key={rowIndex}
+                  className={`border-b hover:bg-muted/50 ${
                     product.status === "error" ? "bg-red-50/50" : product.status === "warning" ? "bg-yellow-50/50" : ""
-                  }
+                  }`}
                 >
-                  <TableCell>
+                  <td className="p-3">
                     {(product.errors.length > 0 || product.warnings.length > 0) && (
-                      <Button variant="ghost" size="sm" onClick={() => toggleRow(product.id)} className="p-0 h-auto">
-                        {expandedRows.has(product.id) ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleRow(rowIndex)}
+                        className="p-0 h-auto hover:bg-transparent"
+                      >
+                        {expandedRows.has(rowIndex.toString()) ? (
                           <ChevronDown className="w-4 h-4" />
                         ) : (
                           <ChevronRight className="w-4 h-4" />
                         )}
                       </Button>
                     )}
-                  </TableCell>
-                  <TableCell>
+                  </td>
+                  <td className="p-3">
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(product.status)}
                       {getStatusBadge(product.status)}
                     </div>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {product.name || <span className="text-muted-foreground italic">No name</span>}
-                  </TableCell>
-                  <TableCell>{product.sku}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>
-                    {product.price > 0 ? (
-                      product.price.toLocaleString()
-                    ) : (
-                      <span className="text-muted-foreground italic">No price</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={product.stock > 0 ? "default" : "secondary"}>{product.stock}</Badge>
-                  </TableCell>
-                  <TableCell>
+                  </td>
+                  {headers.map((header, colIndex) => (
+                    <td key={colIndex} className="p-3 text-sm whitespace-nowrap">
+                      {product[header] ? (
+                        <span>{product[header]}</span>
+                      ) : (
+                        <span className="text-muted-foreground italic">-</span>
+                      )}
+                    </td>
+                  ))}
+                  <td className="p-3">
                     <div className="flex items-center space-x-1">
                       {product.errors.length > 0 && (
                         <Badge variant="destructive" className="text-xs">
@@ -132,56 +127,57 @@ export function DataPreviewTable({ data }: DataPreviewTableProps) {
                         </Badge>
                       )}
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
 
-                {expandedRows.has(product.id) && (product.errors.length > 0 || product.warnings.length > 0) && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="p-0">
-                      <div className="px-4 py-3 bg-muted/30 space-y-2">
-                        {product.errors.length > 0 && (
-                          <Alert className="border-red-200 bg-red-50">
-                            <XCircle className="h-4 w-4 text-red-600" />
-                            <AlertDescription>
-                              <div className="space-y-1">
-                                <p className="font-medium text-red-800">Errors:</p>
-                                <ul className="list-disc list-inside space-y-1 text-red-700">
-                                  {product.errors.map((error, index) => (
-                                    <li key={index} className="text-sm">
-                                      {error}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </AlertDescription>
-                          </Alert>
-                        )}
+                {expandedRows.has(rowIndex.toString()) &&
+                  (product.errors.length > 0 || product.warnings.length > 0) && (
+                    <tr>
+                      <td colSpan={headers.length + 3} className="p-0">
+                        <div className="px-4 py-3 bg-muted/30 space-y-2">
+                          {product.errors.length > 0 && (
+                            <Alert className="border-red-200 bg-red-50">
+                              <XCircle className="h-4 w-4 text-red-600" />
+                              <AlertDescription>
+                                <div className="space-y-1">
+                                  <p className="font-medium text-red-800">Errors:</p>
+                                  <ul className="list-disc list-inside space-y-1 text-red-700">
+                                    {product.errors.map((error, index) => (
+                                      <li key={index} className="text-sm">
+                                        {error}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </AlertDescription>
+                            </Alert>
+                          )}
 
-                        {product.warnings.length > 0 && (
-                          <Alert className="border-yellow-200 bg-yellow-50">
-                            <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                            <AlertDescription>
-                              <div className="space-y-1">
-                                <p className="font-medium text-yellow-800">Warnings:</p>
-                                <ul className="list-disc list-inside space-y-1 text-yellow-700">
-                                  {product.warnings.map((warning, index) => (
-                                    <li key={index} className="text-sm">
-                                      {warning}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
+                          {product.warnings.length > 0 && (
+                            <Alert className="border-yellow-200 bg-yellow-50">
+                              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                              <AlertDescription>
+                                <div className="space-y-1">
+                                  <p className="font-medium text-yellow-800">Warnings:</p>
+                                  <ul className="list-disc list-inside space-y-1 text-yellow-700">
+                                    {product.warnings.map((warning, index) => (
+                                      <li key={index} className="text-sm">
+                                        {warning}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
               </>
             ))}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
     </div>
   )
