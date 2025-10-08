@@ -46,6 +46,14 @@ export function AdminHeader() {
     }
   }
 
+  const getDisplayName = () => {
+    if (!adminInfo) return "Admin User"
+    const firstName = adminInfo.first_name || ""
+    const lastName = adminInfo.last_name || ""
+    const fullName = `${firstName} ${lastName}`.trim()
+    return fullName || adminInfo.username || adminInfo.email || "Admin User"
+  }
+
   return (
     <header className="flex items-center justify-between px-6 py-4 bg-background border-b border-border">
       <div className="flex items-center space-x-4 flex-1">
@@ -98,9 +106,7 @@ export function AdminHeader() {
                 <User className="w-4 h-4 text-primary-foreground" />
               </div>
               <div className="text-left hidden sm:block">
-                <span className="text-sm font-medium">
-                  {adminInfo ? `${adminInfo.first_name} ${adminInfo.last_name}` : "Admin"}
-                </span>
+                <span className="text-sm font-medium">{getDisplayName()}</span>
                 {adminInfo?.department && <div className="text-xs text-muted-foreground">{adminInfo.department}</div>}
               </div>
             </Button>
@@ -108,18 +114,16 @@ export function AdminHeader() {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>
               <div>
-                <p className="font-medium">
-                  {adminInfo ? `${adminInfo.first_name} ${adminInfo.last_name}` : "Admin User"}
-                </p>
+                <p className="font-medium">{getDisplayName()}</p>
                 <p className="text-sm text-muted-foreground">{adminInfo?.email || "admin@alphacom.com"}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/profile")}>
               <User className="w-4 h-4 mr-2" />
               Profile Settings
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/settings")}>
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </DropdownMenuItem>

@@ -20,12 +20,14 @@ import {
   Trash2,
   Loader2,
   Download,
+  ImageIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useProducts, useProductStats, useDownloadBulkTemplate, useDeleteProduct } from "@/hooks/use-products"
 import { ProductDetailModal } from "@/components/product-detail-modal"
+import { ProductImageModal } from "@/components/product-image-modal" // Added ProductImageModal import
 import { Pagination } from "@/components/pagination"
 
 export default function ProductsPage() {
@@ -40,6 +42,8 @@ export default function ProductsPage() {
   const [includeInactive, setIncludeInactive] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false) // Added state for image modal
+  const [imageModalProductId, setImageModalProductId] = useState<string | null>(null) // Added state for product ID in image modal
 
   const {
     data: productsData,
@@ -111,6 +115,11 @@ export default function ProductsPage() {
   const handleViewProduct = (productId: string) => {
     setSelectedProductId(productId)
     setIsDetailModalOpen(true)
+  }
+
+  const handleManageImages = (productId: string) => {
+    setImageModalProductId(productId)
+    setIsImageModalOpen(true)
   }
 
   const handleDeleteProduct = (productId: string) => {
@@ -334,7 +343,7 @@ export default function ProductsPage() {
               <div className="w-32">Price</div>
               <div className="w-24">Stock</div>
               <div className="w-24">Status</div>
-              <div className="w-16">Actions</div>
+              <div className="w-20">Actions</div> {/* Increased width for extra icon */}
             </div>
 
             {/* Loading State */}
@@ -424,7 +433,17 @@ export default function ProductsPage() {
                       {product.status.replace("_", " ")}
                     </Badge>
                   </div>
-                  <div className="w-16">
+                  <div className="w-20 flex items-center space-x-1">
+                    {" "}
+                    {/* Added flex container for icons */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleManageImages(product.id)}
+                      title="Manage Images"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
@@ -473,6 +492,15 @@ export default function ProductsPage() {
         onClose={() => {
           setIsDetailModalOpen(false)
           setSelectedProductId(null)
+        }}
+      />
+
+      <ProductImageModal
+        productId={imageModalProductId}
+        open={isImageModalOpen}
+        onClose={() => {
+          setIsImageModalOpen(false)
+          setImageModalProductId(null)
         }}
       />
     </div>

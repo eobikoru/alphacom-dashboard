@@ -15,7 +15,6 @@ import { ArrowLeft, Loader2, Save } from "lucide-react"
 import Link from "next/link"
 import { useProduct, useUpdateProduct } from "@/hooks/use-products"
 import { useCategories, useSubcategories } from "@/hooks/use-categories"
-import { ImageUpload } from "@/components/image-upload"
 
 export default function EditProductPage() {
   const router = useRouter()
@@ -42,8 +41,6 @@ export default function EditProductPage() {
     is_featured: false,
     show_discount: false,
   })
-
-  const [images, setImages] = useState<File[]>([])
 
   // Populate form when product data loads
   useEffect(() => {
@@ -92,11 +89,6 @@ export default function EditProductPage() {
     data.append("is_active", formData.is_active.toString())
     data.append("is_featured", formData.is_featured.toString())
     data.append("show_discount", formData.show_discount.toString())
-
-    // Append images if any
-    images.forEach((image) => {
-      data.append("images", image)
-    })
 
     updateProduct.mutate(data, {
       onSuccess: () => {
@@ -264,33 +256,6 @@ export default function EditProductPage() {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Product Images */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Product Images</CardTitle>
-            <CardDescription>Add new images (existing images will be kept)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ImageUpload images={images} onImagesChange={setImages} maxImages={5} />
-
-            {product.images && product.images.length > 0 && (
-              <div className="mt-4">
-                <Label>Current Images</Label>
-                <div className="grid grid-cols-5 gap-2 mt-2">
-                  {product.images.map((image, index) => (
-                    <img
-                      key={index}
-                      src={image.url || "/placeholder.svg"}
-                      alt={`Product ${index + 1}`}
-                      className="w-full h-24 object-cover rounded-lg border"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 

@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="min-h-screen bg-background">
         <div className="flex">
           <AdminSidebar />
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col ml-64">
             <AdminHeader />
             <main className="flex-1 p-6 bg-muted/20">{children}</main>
           </div>

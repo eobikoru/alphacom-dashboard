@@ -8,6 +8,8 @@ import {
   bulkUploadProducts,
   deleteProduct,
   updateProduct,
+  deleteProductImage,
+  addProductImages,
 } from "@/lib/api/products"
 import type { ProductsQueryParams } from "@/types/product"
 import { toast } from "sonner"
@@ -133,6 +135,40 @@ export const useUpdateProduct = (productId: string) => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.detail || "Failed to update product")
+    },
+  })
+}
+
+// Delete product image mutation
+export const useDeleteProductImage = (productId: string) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (publicId: string) => deleteProductImage(productId, publicId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: productKeys.detail(productId) })
+      toast.success("Image deleted successfully")
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || "Failed to delete image")
+    },
+  })
+}
+
+// Add product images mutation
+export const useAddProductImages = (productId: string) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (images: File[]) => addProductImages(productId, images),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: productKeys.detail(productId) })
+      toast.success("Images added successfully")
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || "Failed to add images")
     },
   })
 }

@@ -27,7 +27,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Search, Eye, Trash2, Edit, FolderTree, Package, Upload } from "lucide-react"
+import { Plus, Search, Eye, Trash2, Edit, FolderTree, Package, Upload, ChevronRight } from "lucide-react"
 import {
   useCategories,
   useCategoryTree,
@@ -36,10 +36,19 @@ import {
   useUpdateCategory,
   useDeleteCategory,
   useCreateSubcategory,
+  useUpdateSubcategory,
+  useDeleteSubcategory,
   useSubcategories,
+  useSubcategory,
   useCategoryProducts,
 } from "@/hooks/use-categories"
-import type { Category, CreateCategoryData, CreateSubcategoryData, CategoryTree } from "@/types/category"
+import type {
+  Category,
+  CreateCategoryData,
+  CreateSubcategoryData,
+  CategoryTree,
+  UpdateCategoryData,
+} from "@/types/category"
 import Image from "next/image"
 import { CategoryImageUploadModal } from "@/components/category-image-upload-modal"
 import { Pagination } from "@/components/pagination"
@@ -54,6 +63,11 @@ export default function CategoriesPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showProductsDialog, setShowProductsDialog] = useState(false)
   const [showImageUploadModal, setShowImageUploadModal] = useState(false)
+  const [showSubcategoriesView, setShowSubcategoriesView] = useState(false)
+  const [showEditSubcategoryDialog, setShowEditSubcategoryDialog] = useState(false)
+  const [showDeleteSubcategoryDialog, setShowDeleteSubcategoryDialog] = useState(false)
+  const [showViewSubcategoryDialog, setShowViewSubcategoryDialog] = useState(false)
+  const [selectedSubcategory, setSelectedSubcategory] = useState<Category | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
   const [selectedParentId, setSelectedParentId] = useState<string>("")
   const [activeTab, setActiveTab] = useState("list")
@@ -63,6 +77,7 @@ export default function CategoriesPage() {
   const { data: treeData } = useCategoryTree()
   const { data: categoryDetail } = useCategory(selectedCategory?.id || "")
   const { data: subcategories } = useSubcategories(selectedParentId)
+  const { data: subcategoryDetail } = useSubcategory(selectedSubcategory?.id || "")
   const { data: categoryProducts } = useCategoryProducts({
     category_id: selectedCategory?.id || "",
     page: 1,
@@ -74,6 +89,8 @@ export default function CategoriesPage() {
   const updateCategoryMutation = useUpdateCategory()
   const deleteCategoryMutation = useDeleteCategory()
   const createSubcategoryMutation = useCreateSubcategory()
+  const updateSubcategoryMutation = useUpdateSubcategory()
+  const deleteSubcategoryMutation = useDeleteSubcategory()
 
   // Form states
   const [categoryForm, setCategoryForm] = useState<CreateCategoryData>({
@@ -84,6 +101,12 @@ export default function CategoriesPage() {
   })
 
   const [subcategoryForm, setSubcategoryForm] = useState<CreateSubcategoryData>({
+    name: "",
+    description: "",
+    sort_order: 0,
+  })
+
+  const [editSubcategoryForm, setEditSubcategoryForm] = useState<UpdateCategoryData>({
     name: "",
     description: "",
     sort_order: 0,
@@ -115,7 +138,6 @@ export default function CategoriesPage() {
             description: "",
             sort_order: 0,
           })
-          setSelectedParentId("")
         },
       },
     )
@@ -143,12 +165,43 @@ export default function CategoriesPage() {
     )
   }
 
+  const handleUpdateSubcategory = () => {
+    if (!selectedSubcategory) return
+    updateSubcategoryMutation.mutate(
+      {
+        subcategoryId: selectedSubcategory.id,
+        data: editSubcategoryForm,
+      },
+      {
+        onSuccess: () => {
+          setShowEditSubcategoryDialog(false)
+          setSelectedSubcategory(null)
+          setEditSubcategoryForm({
+            name: "",
+            description: "",
+            sort_order: 0,
+          })
+        },
+      },
+    )
+  }
+
   const handleDeleteCategory = () => {
     if (!selectedCategory) return
     deleteCategoryMutation.mutate(selectedCategory.id, {
       onSuccess: () => {
         setShowDeleteDialog(false)
         setSelectedCategory(null)
+      },
+    })
+  }
+
+  const handleDeleteSubcategory = () => {
+    if (!selectedSubcategory) return
+    deleteSubcategoryMutation.mutate(selectedSubcategory.id, {
+      onSuccess: () => {
+        setShowDeleteSubcategoryDialog(false)
+        setSelectedSubcategory(null)
       },
     })
   }
@@ -165,6 +218,26 @@ export default function CategoriesPage() {
       meta_keywords: category.meta_keywords,
     })
     setShowEditDialog(true)
+  }
+
+  const openEditSubcategoryDialog = (subcategory: Category) => {
+    setSelectedSubcategory(subcategory)
+    setEditSubcategoryForm({
+      name: subcategory.name,
+      description: subcategory.description || "",
+      sort_order: subcategory.sort_order,
+      is_active: subcategory.is_active,
+      meta_title: subcategory.meta_title,
+      meta_description: subcategory.meta_description,
+      meta_keywords: subcategory.meta_keywords,
+    })
+    setShowEditSubcategoryDialog(true)
+  }
+
+  const handleViewSubcategories = (category: Category) => {
+    setSelectedCategory(category)
+    setSelectedParentId(category.id)
+    setShowSubcategoriesView(true)
   }
 
   const filteredCategories = categoriesData?.data.filter((category) =>
@@ -300,6 +373,14 @@ export default function CategoriesPage() {
                                   }}
                                 >
                                   <Plus className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewSubcategories(category)}
+                                  title="View Subcategories"
+                                >
+                                  <ChevronRight className="w-4 h-4" />
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -652,6 +733,224 @@ export default function CategoriesPage() {
         categoryName={selectedCategory?.name || ""}
         currentImageUrl={selectedCategory?.image_url}
       />
+
+      <Dialog open={showSubcategoriesView} onOpenChange={setShowSubcategoriesView}>
+        <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Subcategories of {selectedCategory?.name}</DialogTitle>
+            <DialogDescription>Manage subcategories for this category</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <Button
+                onClick={() => {
+                  setShowAddSubcategoryDialog(true)
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Subcategory
+              </Button>
+            </div>
+            {subcategories && subcategories.length > 0 ? (
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr className="border-b">
+                      <th className="px-4 py-3 text-left text-sm font-medium">Image</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Name</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Products</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
+                      <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subcategories.map((subcategory) => (
+                      <tr key={subcategory.id} className="border-b hover:bg-muted/50">
+                        <td className="px-4 py-3">
+                          {subcategory.image_url ? (
+                            <Image
+                              src={subcategory.image_url || "/placeholder.svg"}
+                              alt={subcategory.name}
+                              width={40}
+                              height={40}
+                              className="rounded object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-muted rounded flex items-center justify-center">
+                              <Package className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 font-medium">{subcategory.name}</td>
+                        <td className="px-4 py-3">{subcategory.product_count}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant={subcategory.is_active ? "default" : "secondary"}>
+                            {subcategory.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedSubcategory(subcategory)
+                                setShowViewSubcategoryDialog(true)
+                              }}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => openEditSubcategoryDialog(subcategory)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedSubcategory(subcategory)
+                                setShowDeleteSubcategoryDialog(true)
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">No subcategories found</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showViewSubcategoryDialog} onOpenChange={setShowViewSubcategoryDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Subcategory Details</DialogTitle>
+          </DialogHeader>
+          {subcategoryDetail && (
+            <div className="space-y-4">
+              {subcategoryDetail.image_url && (
+                <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                  <Image
+                    src={subcategoryDetail.image_url || "/placeholder.svg"}
+                    alt={subcategoryDetail.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Name</Label>
+                  <p className="font-medium">{subcategoryDetail.name}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Level</Label>
+                  <p className="font-medium">Level {subcategoryDetail.level}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Product Count</Label>
+                  <p className="font-medium">{subcategoryDetail.product_count}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Status</Label>
+                  <Badge variant={subcategoryDetail.is_active ? "default" : "secondary"}>
+                    {subcategoryDetail.is_active ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+              </div>
+              {subcategoryDetail.description && (
+                <div>
+                  <Label className="text-muted-foreground">Description</Label>
+                  <p className="text-sm">{subcategoryDetail.description}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showEditSubcategoryDialog} onOpenChange={setShowEditSubcategoryDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Subcategory</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit_sub_name">Name *</Label>
+              <Input
+                id="edit_sub_name"
+                value={editSubcategoryForm.name}
+                onChange={(e) => setEditSubcategoryForm({ ...editSubcategoryForm, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_sub_description">Description</Label>
+              <Textarea
+                id="edit_sub_description"
+                value={editSubcategoryForm.description || ""}
+                onChange={(e) => setEditSubcategoryForm({ ...editSubcategoryForm, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_sub_sort_order">Sort Order</Label>
+              <Input
+                id="edit_sub_sort_order"
+                type="number"
+                value={editSubcategoryForm.sort_order}
+                onChange={(e) =>
+                  setEditSubcategoryForm({
+                    ...editSubcategoryForm,
+                    sort_order: Number.parseInt(e.target.value) || 0,
+                  })
+                }
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="edit_sub_is_active"
+                checked={editSubcategoryForm.is_active}
+                onCheckedChange={(checked) => setEditSubcategoryForm({ ...editSubcategoryForm, is_active: checked })}
+              />
+              <Label htmlFor="edit_sub_is_active">Active</Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditSubcategoryDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateSubcategory} disabled={updateSubcategoryMutation.isPending}>
+              {updateSubcategoryMutation.isPending ? "Updating..." : "Update Subcategory"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={showDeleteSubcategoryDialog} onOpenChange={setShowDeleteSubcategoryDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the subcategory "{selectedSubcategory?.name}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSubcategory}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

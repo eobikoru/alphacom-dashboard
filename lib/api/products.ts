@@ -69,16 +69,30 @@ export const deleteProduct = async (productId: string): Promise<void> => {
 
 // Update a product
 export const updateProduct = async (productId: string, formData: FormData): Promise<ProductDetailResponse> => {
-  console.log("[v0] Updating product with ID:", productId)
-  console.log("[v0] FormData entries:")
-  for (const [key, value] of formData.entries()) {
-    if (value instanceof File) {
-      console.log(`[v0] ${key}:`, value.name, value.type, value.size)
-    } else {
-      console.log(`[v0] ${key}:`, value)
-    }
-  }
+  const { data } = await api.put(`/api/v1/admin/products/${productId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  })
+  return data
+}
 
-  const { data } = await api.put(`/api/v1/admin/products/${productId}`, formData)
+// Delete a product image
+export const deleteProductImage = async (productId: string, publicId: string): Promise<void> => {
+  await api.delete(`/api/v1/admin/products/${productId}/images/${publicId}`)
+}
+
+// Add product images
+export const addProductImages = async (productId: string, images: File[]): Promise<ProductDetailResponse> => {
+  const formData = new FormData()
+  images.forEach((image) => {
+    formData.append("images", image)
+  })
+
+  const { data } = await api.put(`/api/v1/admin/products/${productId}/images`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  })
   return data
 }

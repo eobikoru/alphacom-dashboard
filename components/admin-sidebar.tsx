@@ -91,12 +91,12 @@ export function AdminSidebar() {
   return (
     <div
       className={cn(
-        "flex flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 fixed left-0 top-0",
         collapsed ? "w-16" : "w-64",
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
+      <div className="flex items-center justify-between p-4 border-b border-sidebar-border flex-shrink-0">
         {!collapsed && (
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
@@ -193,7 +193,7 @@ export function AdminSidebar() {
 
       {/* Footer */}
       {!collapsed && adminInfo && (
-        <div className="p-4 border-t border-sidebar-border">
+        <div className="p-4 border-t border-sidebar-border flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="w-9 h-9 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center shadow-md">
               <span className="text-xs font-bold text-white">{adminInfo.username?.substring(0, 2).toUpperCase()}</span>
