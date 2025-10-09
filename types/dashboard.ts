@@ -1,4 +1,7 @@
 export interface DashboardStats {
+    total_orders_today: any
+    completed_orders_change_percent: number
+    completed_orders_today: any
     total_products: number
     products_change_percent: number
     orders_today: number

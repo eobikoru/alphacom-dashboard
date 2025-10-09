@@ -63,12 +63,20 @@ export default function AdminDashboard() {
           description: "Active products in catalog",
         },
         {
-          title: "Orders Today",
-          value: stats.orders_today.toString(),
-          change: `${stats.orders_change_percent > 0 ? "+" : ""}${stats.orders_change_percent}%`,
-          changeType: stats.orders_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
+          title: "Completed Orders",
+          value: stats.completed_orders_today.toString(),
+          change: `${stats.completed_orders_change_percent > 0 ? "+" : ""}${stats.completed_orders_change_percent}%`,
+          changeType: stats.completed_orders_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
           icon: ShoppingCart,
-          description: "New orders received",
+          description: "Completed orders today",
+        },
+        {
+          title: "Total Orders",
+          value: stats.total_orders_today.toString(),
+          change: `${stats.completed_orders_change_percent > 0 ? "+" : ""}${stats.completed_orders_change_percent}%`,
+          changeType: stats.completed_orders_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
+          icon: BarChart3,
+          description: "All orders today",
         },
         {
           title: "Total Customers",
@@ -124,9 +132,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {isLoading
-          ? [...Array(4)].map((_, i) => (
+          ? [...Array(5)].map((_, i) => (
               <Card key={i} className="bg-card border-border">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div className="h-4 w-24 bg-muted animate-pulse rounded" />
