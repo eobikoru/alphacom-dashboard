@@ -19,6 +19,7 @@ import {
   Plus,
   PackagePlus,
   FolderTree,
+  BarChart3,
 } from "lucide-react"
 import { getAdminInfo } from "@/lib/auth"
 import { useDashboardStats } from "@/hooks/use-dashboard"
@@ -28,6 +29,12 @@ const navigation = [
     name: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+    current: false,
+  },
+  {
+    name: "Analytics",
+    href: "/analytics",
+    icon: BarChart3,
     current: false,
   },
   {

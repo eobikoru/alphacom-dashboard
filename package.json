@@ -34,6 +34,7 @@
     "react-dom": "19.1.0",
     "react-dropzone": "^14.3.8",
     "react-redux": "^9.2.0",
+    "recharts": "^2.15.4",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1"
   },
