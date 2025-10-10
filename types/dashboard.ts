@@ -1,4 +1,5 @@
 export interface DashboardStats {
+    conversion_rate: any
     total_orders_today: any
     completed_orders_change_percent: number
     completed_orders_today: any

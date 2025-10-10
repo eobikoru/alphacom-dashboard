@@ -19,8 +19,9 @@ import type { OrderStatus, PaymentStatus } from "@/types/order"
 
 const statusColors: Record<OrderStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  processing: "bg-blue-100 text-blue-800 border-blue-200",
   completed: "bg-green-100 text-green-800 border-green-200",
-  shipped: "bg-blue-100 text-blue-800 border-blue-200",
+  shipped: "bg-cyan-100 text-cyan-800 border-cyan-200",
   delivered: "bg-emerald-100 text-emerald-800 border-emerald-200",
   cancelled: "bg-gray-100 text-gray-800 border-gray-200",
   failed: "bg-red-100 text-red-800 border-red-200",
@@ -58,7 +59,7 @@ export default function OrdersPage() {
     payment_status: paymentStatus || undefined,
     search: search || undefined,
   })
-
+  console.log(data, "data")
   const releaseExpiredMutation = useReleaseExpiredReservations()
 
   const handleSearch = () => {
@@ -162,13 +163,14 @@ export default function OrdersPage() {
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+                {/* <SelectItem value="completed">Completed</SelectItem> */}
                 <SelectItem value="shipped">Shipped</SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
+                {/* <SelectItem value="failed">Failed</SelectItem> */}
                 <SelectItem value="refunded">Refunded</SelectItem>
-                <SelectItem value="partially_refunded">Partially Refunded</SelectItem>
+                {/* <SelectItem value="partially_refunded">Partially Refunded</SelectItem> */}
               </SelectContent>
             </Select>
 
@@ -277,7 +279,7 @@ export default function OrdersPage() {
                         <Button variant="ghost" size="sm" onClick={() => openDetailsModal(order.id)}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {order.status === "pending" && (
+                        {order.status === "processing" && (
                           <Button variant="ghost" size="sm" onClick={() => openShipModal(order.id)}>
                             <Truck className="h-4 w-4" />
                           </Button>
@@ -287,17 +289,16 @@ export default function OrdersPage() {
                             <Package className="h-4 w-4" />
                           </Button>
                         )}
-                        {["pending", "shipped"].includes(order.status) && (
+                        {["processing"].includes(order.status) && (
                           <Button variant="ghost" size="sm" onClick={() => openCancelModal(order.id)}>
                             <XCircle className="h-4 w-4" />
                           </Button>
                         )}
-                        {order.payment_status === "completed" &&
-                          !["refunded", "partially_refunded"].includes(order.status) && (
-                            <Button variant="ghost" size="sm" onClick={() => openRefundModal(order.id)}>
-                              <DollarSign className="h-4 w-4" />
-                            </Button>
-                          )}
+                        {order.payment_status === "" && !["", ""].includes(order.status) && (
+                          <Button variant="ghost" size="sm" onClick={() => openRefundModal(order.id)}>
+                            <DollarSign className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
