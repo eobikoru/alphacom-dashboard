@@ -155,7 +155,7 @@ export default function AdminLoginPage() {
         </Card>
 
         {/* Demo Credentials */}
-        <Card className="bg-muted/50">
+        {/* <Card className="bg-muted/50">
           <CardContent className="pt-6">
             <div className="text-center space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Demo Credentials</p>
@@ -169,7 +169,7 @@ export default function AdminLoginPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Footer */}
         <div className="text-center text-sm text-muted-foreground">
