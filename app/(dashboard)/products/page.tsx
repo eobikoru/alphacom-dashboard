@@ -84,8 +84,8 @@ export default function ProductsPage() {
   }
 
   const handleBulkDelete = () => {
-    toast.success(`${selectedProducts.length} products deleted`)
-    setSelectedProducts([])
+    // toast.success(`${selectedProducts.length} products deleted`)
+    // setSelectedProducts([])
   }
 
   const handleBulkStatusChange = (status: string) => {
@@ -339,7 +339,7 @@ export default function ProductsPage() {
               </div>
               <div className="w-16">Image</div>
               <div className="flex-1">Product</div>
-              <div className="w-32">Category</div>
+              {/* <div className="w-32">Category</div> */}
               <div className="w-32">Price</div>
               <div className="w-24">Stock</div>
               <div className="w-24">Status</div>
@@ -405,16 +405,15 @@ export default function ProductsPage() {
                       className="w-12 h-12 rounded-lg object-cover"
                     />
                   </div>
-                  <div className="flex-1">
+                  
+                  <div className="flex-1 ">
                     <h4 className="font-medium">{product.name}</h4>
                     <p className="text-sm text-muted-foreground">
                       {product.brand && `${product.brand} • `}
                       {product.category_name || "Uncategorized"}
                     </p>
                   </div>
-                  <div className="w-32">
-                    <Badge variant="outline">{product.category_name || "N/A"}</Badge>
-                  </div>
+                 
                   <div className="w-32">
                     <span className="font-medium">₦{Number(product.price).toLocaleString()}</span>
                     {product.compare_at_price && Number(product.compare_at_price) > Number(product.price) && (
