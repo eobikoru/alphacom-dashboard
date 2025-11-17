@@ -15,6 +15,7 @@ import { DeliverOrderModal } from "@/components/deliver-order-modal"
 import { CancelOrderModal } from "@/components/cancel-order-modal"
 import { RefundOrderModal } from "@/components/refund-order-modal"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Pagination } from "@/components/pagination"
 import type { OrderStatus, PaymentStatus } from "@/types/order"
 
 const statusColors: Record<OrderStatus, string> = {
@@ -39,7 +40,7 @@ const paymentStatusColors: Record<PaymentStatus, string> = {
 
 export default function OrdersPage() {
   const [page, setPage] = useState(1)
-  const [perPage] = useState(20)
+  const [perPage, setPerPage] = useState(10)
   const [status, setStatus] = useState<string>("")
   const [paymentStatus, setPaymentStatus] = useState<string>("")
   const [search, setSearch] = useState("")
@@ -74,6 +75,12 @@ export default function OrdersPage() {
 
   const handlePaymentStatusChange = (value: string) => {
     setPaymentStatus(value === "all" ? "" : value)
+    setPage(1)
+  }
+
+  const handlePerPageChange = (value: string) => {
+    const next = Number(value)
+    setPerPage(next)
     setPage(1)
   }
 
@@ -309,25 +316,30 @@ export default function OrdersPage() {
         </CardContent>
       </Card>
 
-      {data && data.pagination.pages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {(page - 1) * perPage + 1} to {Math.min(page * perPage, data.pagination.total)} of{" "}
-            {data.pagination.total} orders
-          </p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 1}>
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(page + 1)}
-              disabled={page >= data.pagination.pages}
-            >
-              Next
-            </Button>
+      {data && (
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Rows per page</span>
+            <Select value={String(perPage)} onValueChange={handlePerPageChange}>
+              <SelectTrigger className="h-8 w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[10, 20, 50, 100].map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          <Pagination
+            currentPage={page}
+            totalPages={data.pagination.pages}
+            totalItems={data.pagination.total}
+            itemsPerPage={perPage}
+            onPageChange={setPage}
+          />
         </div>
       )}
 
