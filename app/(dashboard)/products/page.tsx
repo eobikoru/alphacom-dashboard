@@ -44,6 +44,7 @@ export default function ProductsPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isImageModalOpen, setIsImageModalOpen] = useState(false) // Added state for image modal
   const [imageModalProductId, setImageModalProductId] = useState<string | null>(null) // Added state for product ID in image modal
+  const [pageSearch, setPageSearch] = useState("")
 
   const {
     data: productsData,
@@ -126,6 +127,16 @@ export default function ProductsPage() {
     if (confirm("Are you sure you want to delete this product?")) {
       deleteProductMutation.mutate(productId)
     }
+  }
+
+  const handlePageSearch = () => {
+    if (!productsData) return
+    const targetPage = Number(pageSearch)
+    if (!Number.isFinite(targetPage) || targetPage < 1 || targetPage > productsData.pages) {
+      toast.error(`Enter a page between 1 and ${productsData.pages}`)
+      return
+    }
+    setPage(targetPage)
   }
 
   return (
@@ -473,13 +484,30 @@ export default function ProductsPage() {
 
           {/* Pagination */}
           {productsData && productsData.total > perPage && (
-            <Pagination
-              currentPage={page}
-              totalPages={productsData.pages}
-              totalItems={productsData.total}
-              itemsPerPage={perPage}
-              onPageChange={setPage}
-            />
+            <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={productsData.pages}
+                  placeholder={`Go to page (1-${productsData.pages})`}
+                  className="w-[160px]"
+                  value={pageSearch}
+                  onChange={(e) => setPageSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handlePageSearch()}
+                />
+                <Button variant="outline" size="sm" onClick={handlePageSearch}>
+                  Go
+                </Button>
+              </div>
+              <Pagination
+                currentPage={page}
+                totalPages={productsData.pages}
+                totalItems={productsData.total}
+                itemsPerPage={perPage}
+                onPageChange={setPage}
+              />
+            </div>
           )}
         </CardContent>
       </Card>
