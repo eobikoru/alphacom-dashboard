@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useRouter, useParams } from "next/navigation"
+import { useRouter, useParams, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,7 +19,10 @@ import { useCategories, useSubcategories } from "@/hooks/use-categories"
 export default function EditProductPage() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const productId = params.id as string
+  const fromPage = searchParams.get("from_page")
+  const productsListUrl = fromPage ? `/products?page=${fromPage}` : "/products"
 
   const { data: product, isLoading: isLoadingProduct } = useProduct(productId)
   const updateProduct = useUpdateProduct(productId)
@@ -92,7 +95,7 @@ export default function EditProductPage() {
 
     updateProduct.mutate(data, {
       onSuccess: () => {
-        router.push("/products")
+        router.push(productsListUrl)
       },
     })
   }
@@ -109,7 +112,7 @@ export default function EditProductPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-muted-foreground mb-4">Product not found</p>
-        <Link href="/products">
+        <Link href={productsListUrl}>
           <Button>Back to Products</Button>
         </Link>
       </div>
@@ -121,7 +124,7 @@ export default function EditProductPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link href="/products">
+          <Link href={productsListUrl}>
             <Button variant="ghost" size="icon">
               <ArrowLeft className="w-4 h-4" />
             </Button>

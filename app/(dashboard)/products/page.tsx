@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,6 +23,7 @@ import {
   ImageIcon,
 } from "lucide-react"
 import Link from "next/link"
+import { useSearchParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useProducts, useProductStats, useDownloadBulkTemplate, useDeleteProduct } from "@/hooks/use-products"
@@ -31,9 +32,23 @@ import { ProductImageModal } from "@/components/product-image-modal" // Added Pr
 import { Pagination } from "@/components/pagination"
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pageFromUrl = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1)
+
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
-  const [page, setPage] = useState(1)
-  const [perPage] = useState(5)
+  const [page, setPage] = useState(pageFromUrl)
+  const [perPage] = useState(15)
+
+  // Sync URL -> page when returning from edit (e.g. /products?page=34)
+  useEffect(() => {
+    setPage(pageFromUrl)
+  }, [pageFromUrl])
+
+  const setPageAndUpdateUrl = (newPage: number) => {
+    setPage(newPage)
+    router.replace(`/products?page=${newPage}`, { scroll: false })
+  }
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all_status")
   const [categoryFilter, setCategoryFilter] = useState<string>("")
@@ -136,7 +151,7 @@ export default function ProductsPage() {
       toast.error(`Enter a page between 1 and ${productsData.pages}`)
       return
     }
-    setPage(targetPage)
+    setPageAndUpdateUrl(targetPage)
   }
 
   return (
@@ -466,7 +481,7 @@ export default function ProductsPage() {
                           View
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href={`/products/${product.id}/edit`}>
+                          <Link href={`/products/${product.id}/edit?from_page=${page}`}>
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
                           </Link>
@@ -505,7 +520,7 @@ export default function ProductsPage() {
                 totalPages={productsData.pages}
                 totalItems={productsData.total}
                 itemsPerPage={perPage}
-                onPageChange={setPage}
+                onPageChange={setPageAndUpdateUrl}
               />
             </div>
           )}
