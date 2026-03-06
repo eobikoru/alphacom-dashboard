@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-      <body>
+      <body className="overflow-x-hidden">
         <NextTopLoader color="#2563eb" showSpinner={false} height={3} />
         <Providers>{children}</Providers>
       </body>

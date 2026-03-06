@@ -127,17 +127,18 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-          <p className="text-muted-foreground">Manage and track all customer orders</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Orders</h1>
+          <p className="text-sm text-muted-foreground">Manage and track all customer orders</p>
         </div>
         <Button
           onClick={() => releaseExpiredMutation.mutate()}
           disabled={releaseExpiredMutation.isPending}
           variant="outline"
           size="sm"
+          className="w-full sm:w-auto"
         >
           <Clock className="mr-2 h-4 w-4" />
           Release Expired
@@ -145,12 +146,12 @@ export default function OrdersPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Filter Orders</CardTitle>
-          <CardDescription>Search and filter orders by status, payment, or customer</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg sm:text-xl">Filter Orders</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">Search and filter orders by status, payment, or customer</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
             <div className="flex gap-2">
               <Input
                 placeholder="Search by order # or email..."
@@ -214,7 +215,8 @@ export default function OrdersPage() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <div className="overflow-x-auto">
+          <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Order Number</TableHead>
@@ -311,10 +313,11 @@ export default function OrdersPage() {
                   </TableRow>
                 ))
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          </TableBody>
+        </Table>
+          </div>
+      </CardContent>
+    </Card>
 
       {data && (
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

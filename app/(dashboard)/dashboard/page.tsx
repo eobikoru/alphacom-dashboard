@@ -98,32 +98,32 @@ export default function AdminDashboard() {
     : []
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's what's happening with your store.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Welcome back! Here's what's happening with your store.</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center space-x-2 bg-transparent"
+            className="flex items-center gap-2 bg-transparent"
           >
             <RefreshCw className={cn("w-4 h-4", refreshing && "animate-spin")} />
             <span>Refresh</span>
           </Button>
           <Link href="/products/bulk">
-            <Button variant="outline" className="flex items-center space-x-2 bg-transparent">
+            <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
               <Upload className="w-4 h-4" />
-              <span>Bulk Upload</span>
+              <span className="hidden sm:inline">Bulk Upload</span>
             </Button>
           </Link>
           <Link href="/products/add">
-            <Button className="flex items-center space-x-2">
+            <Button size="sm" className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
               <span>Add Product</span>
             </Button>

@@ -35,21 +35,28 @@ export default function ProductsPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pageFromUrl = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1)
+  const searchFromUrl = searchParams.get("search") ?? ""
 
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [page, setPage] = useState(pageFromUrl)
   const [perPage] = useState(15)
+  const [searchQuery, setSearchQuery] = useState(searchFromUrl)
 
-  // Sync URL -> page when returning from edit (e.g. /products?page=34)
+  // Sync URL -> state when returning from edit or navbar search (e.g. /products?page=34 or ?search=foo)
   useEffect(() => {
     setPage(pageFromUrl)
   }, [pageFromUrl])
+  useEffect(() => {
+    setSearchQuery(searchFromUrl)
+  }, [searchFromUrl])
 
   const setPageAndUpdateUrl = (newPage: number) => {
     setPage(newPage)
-    router.replace(`/products?page=${newPage}`, { scroll: false })
+    const params = new URLSearchParams()
+    params.set("page", String(newPage))
+    if (searchQuery.trim()) params.set("search", searchQuery.trim())
+    router.replace(`/products?${params.toString()}`, { scroll: false })
   }
-  const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all_status")
   const [categoryFilter, setCategoryFilter] = useState<string>("")
   const [brandFilter, setBrandFilter] = useState<string>("")
@@ -155,17 +162,18 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Products</h1>
-          <p className="text-muted-foreground">Manage your product catalog</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Products</h1>
+          <p className="text-sm text-muted-foreground">Manage your product catalog</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            className="flex items-center space-x-2 bg-transparent"
+            size="sm"
+            className="flex items-center gap-2 bg-transparent"
             onClick={handleDownloadTemplate}
             disabled={downloadTemplate.isPending}
           >
@@ -174,16 +182,16 @@ export default function ProductsPage() {
             ) : (
               <Download className="w-4 h-4" />
             )}
-            <span>Download Template</span>
+            <span className="hidden sm:inline">Download Template</span>
           </Button>
           <Link href="/products/bulk">
-            <Button variant="outline" className="flex items-center space-x-2 bg-transparent">
+            <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
               <Upload className="w-4 h-4" />
-              <span>Bulk Upload</span>
+              <span className="hidden sm:inline">Bulk Upload</span>
             </Button>
           </Link>
           <Link href="/products/add">
-            <Button className="flex items-center space-x-2">
+            <Button size="sm" className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
               <span>Add Product</span>
             </Button>
@@ -294,7 +302,7 @@ export default function ProductsPage() {
               </div>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -310,14 +318,14 @@ export default function ProductsPage() {
                 placeholder="Category ID"
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-[140px]"
+                className="w-full sm:w-[140px]"
               />
 
               <Input
                 placeholder="Brand"
                 value={brandFilter}
                 onChange={(e) => setBrandFilter(e.target.value)}
-                className="w-[140px]"
+                className="w-full sm:w-[140px]"
               />
             </div>
 
@@ -347,15 +355,16 @@ export default function ProductsPage() {
 
       {/* Products Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Products ({productsData?.total || 0})</CardTitle>
-          <CardDescription>A list of all products in your catalog</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg sm:text-xl">Products ({productsData?.total || 0})</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">A list of all products in your catalog</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className="p-2 sm:p-6">
+          <div className="overflow-x-auto -mx-2 sm:mx-0">
+            <div className="space-y-4 min-w-[640px]">
             {/* Table Header */}
-            <div className="flex items-center space-x-4 p-4 bg-muted/50 rounded-lg font-medium text-sm">
-              <div className="w-8">
+            <div className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-muted/50 rounded-lg font-medium text-xs sm:text-sm">
+              <div className="w-8 shrink-0">
                 <Checkbox
                   checked={
                     selectedProducts.length === productsData?.data.length && (productsData?.data.length || 0) > 0
@@ -363,13 +372,12 @@ export default function ProductsPage() {
                   onCheckedChange={handleSelectAll}
                 />
               </div>
-              <div className="w-16">Image</div>
-              <div className="flex-1">Product</div>
-              {/* <div className="w-32">Category</div> */}
-              <div className="w-32">Price</div>
-              <div className="w-24">Stock</div>
-              <div className="w-24">Status</div>
-              <div className="w-20">Actions</div> {/* Increased width for extra icon */}
+              <div className="w-12 sm:w-16 shrink-0">Image</div>
+              <div className="flex-1 min-w-[120px]">Product</div>
+              <div className="w-24 sm:w-32 shrink-0">Price</div>
+              <div className="w-16 sm:w-24 shrink-0">Stock</div>
+              <div className="w-20 sm:w-24 shrink-0">Status</div>
+              <div className="w-20 shrink-0">Actions</div>
             </div>
 
             {/* Loading State */}
@@ -416,49 +424,49 @@ export default function ProductsPage() {
               productsData.data.map((product) => (
                 <div
                   key={product.id}
-                  className="flex items-center space-x-4 p-4 border border-border rounded-lg hover:bg-muted/20 transition-colors"
+                  className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 border border-border rounded-lg hover:bg-muted/20 transition-colors"
                 >
-                  <div className="w-8">
+                  <div className="w-8 shrink-0">
                     <Checkbox
                       checked={selectedProducts.includes(product.id)}
                       onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
                     />
                   </div>
-                  <div className="w-16">
+                  <div className="w-12 sm:w-16 shrink-0">
                     <img
                       src={product.images?.[0]?.url || "/placeholder.svg"}
                       alt={product.name}
-                      className="w-12 h-12 rounded-lg object-cover"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover"
                     />
                   </div>
                   
-                  <div className="flex-1 ">
-                    <h4 className="font-medium">{product.name}</h4>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex-1 min-w-[120px]">
+                    <h4 className="font-medium text-sm sm:text-base truncate">{product.name}</h4>
+                    <p className="text-xs text-muted-foreground truncate">
                       {product.brand && `${product.brand} • `}
                       {product.category_name || "Uncategorized"}
                     </p>
                   </div>
                  
-                  <div className="w-32">
-                    <span className="font-medium">₦{Number(product.price).toLocaleString()}</span>
+                  <div className="w-24 sm:w-32 shrink-0">
+                    <span className="font-medium text-sm">₦{Number(product.price).toLocaleString()}</span>
                     {product.compare_at_price && Number(product.compare_at_price) > Number(product.price) && (
                       <p className="text-xs text-muted-foreground line-through">
                         ₦{Number(product.compare_at_price).toLocaleString()}
                       </p>
                     )}
                   </div>
-                  <div className="w-24">
+                  <div className="w-16 sm:w-24 shrink-0">
                     <Badge variant={product.stock_available > 0 ? "default" : "destructive"}>
                       {product.stock_available}
                     </Badge>
                   </div>
-                  <div className="w-24">
-                    <Badge variant={getStatusVariant(product.status)} className="capitalize">
+                  <div className="w-20 sm:w-24 shrink-0">
+                    <Badge variant={getStatusVariant(product.status)} className="capitalize text-xs">
                       {product.status.replace("_", " ")}
                     </Badge>
                   </div>
-                  <div className="w-20 flex items-center space-x-1">
+                  <div className="w-20 shrink-0 flex items-center gap-0.5 sm:gap-1">
                     {" "}
                     {/* Added flex container for icons */}
                     <Button
@@ -495,6 +503,7 @@ export default function ProductsPage() {
                   </div>
                 </div>
               ))}
+            </div>
           </div>
 
           {/* Pagination */}

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { Bell, Search, User, LogOut, Settings } from "lucide-react"
+import { Bell, Search, User, LogOut, Settings, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -14,15 +14,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { logoutAdmin, getAdminInfo } from "@/lib/auth"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useState, useEffect } from "react"
 
-export function AdminHeader() {
+interface AdminHeaderProps {
+  onMenuClick?: () => void
+}
+
+export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const [adminInfo, setAdminInfo] = useState<any>(null)
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
+  const [searchFocused, setSearchFocused] = useState(false)
   const [notifications] = useState([
     { id: 1, title: "Low stock alert", message: "Dell XPS 13 is running low", time: "2 min ago", type: "warning" },
     { id: 2, title: "New order", message: "Order #1234 received", time: "5 min ago", type: "info" },
@@ -55,20 +61,34 @@ export function AdminHeader() {
   }
 
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-background border-b border-border">
-      <div className="flex items-center space-x-4 flex-1">
-        <form onSubmit={handleSearch} className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+    <header className="flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 bg-background border-b border-border">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {onMenuClick && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="shrink-0 md:hidden"
+            onClick={onMenuClick}
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+        )}
+        <form onSubmit={handleSearch} className={cn("relative flex-1 min-w-0", searchFocused ? "max-w-full" : "max-w-full sm:max-w-md")}>
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 shrink-0" />
           <Input
-            placeholder="Search products, orders, customers..."
+            placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-muted/50 border-muted-foreground/20"
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
+            className="pl-10 bg-muted/50 border-muted-foreground/20 w-full"
           />
         </form>
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center gap-1 sm:gap-4 shrink-0">
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

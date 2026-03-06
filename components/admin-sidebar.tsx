@@ -20,6 +20,7 @@ import {
   PackagePlus,
   FolderTree,
   BarChart3,
+  X,
 } from "lucide-react"
 import { getAdminInfo } from "@/lib/auth"
 import { useDashboardStats } from "@/hooks/use-dashboard"
@@ -84,7 +85,12 @@ const secondaryNavigation = [
   },
 ]
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  mobileOpen?: boolean
+  onMobileClose?: () => void
+}
+
+export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [adminInfo, setAdminInfo] = useState<any>(null)
   const pathname = usePathname()
@@ -98,31 +104,46 @@ export function AdminSidebar() {
   return (
     <div
       className={cn(
-        "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 fixed left-0 top-0",
+        "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 fixed left-0 top-0 z-40",
         collapsed ? "w-16" : "w-64",
+        "max-md:translate-x-0 max-md:shadow-xl",
+        !mobileOpen && "max-md:-translate-x-full",
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border flex-shrink-0">
         {!collapsed && (
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="flex items-center space-x-3 min-w-0">
+            <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
               <Package className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <h2 className="text-base font-bold text-sidebar-foreground">AlphaCom</h2>
+            <div className="min-w-0">
+              <h2 className="text-base font-bold text-sidebar-foreground truncate">AlphaCom</h2>
               <p className="text-xs text-sidebar-foreground/60">Admin Panel</p>
             </div>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-sidebar-foreground hover:bg-sidebar-accent h-8 w-8 p-0"
-        >
-          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </Button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed(!collapsed)}
+            className="text-sidebar-foreground hover:bg-sidebar-accent h-8 w-8 p-0 hidden md:flex"
+          >
+            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </Button>
+          {onMobileClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onMobileClose}
+              className="text-sidebar-foreground hover:bg-sidebar-accent h-8 w-8 p-0 md:hidden"
+              aria-label="Close menu"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Navigation */}
@@ -136,6 +157,7 @@ export function AdminSidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={() => onMobileClose?.()}
                 className={cn(
                   "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all group relative",
                   isActive
@@ -178,6 +200,7 @@ export function AdminSidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={() => onMobileClose?.()}
                 className={cn(
                   "flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all group relative",
                   isActive
