@@ -4,8 +4,10 @@ import {
   getProductById,
   createProduct,
   downloadBulkTemplate,
+  downloadBulkUpdateTemplate,
   getProductStats,
   bulkUploadProducts,
+  bulkUpdateProducts,
   deleteProduct,
   updateProduct,
   deleteProductImage,
@@ -87,6 +89,27 @@ export const useDownloadBulkTemplate = () => {
   })
 }
 
+// Download bulk update template
+export const useDownloadBulkUpdateTemplate = () => {
+  return useMutation({
+    mutationFn: downloadBulkUpdateTemplate,
+    onSuccess: ({ blob, filename }) => {
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+      toast.success("Bulk update template downloaded successfully")
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || "Failed to download bulk update template")
+    },
+  })
+}
+
 // Bulk upload products
 export const useBulkUploadProducts = () => {
   const queryClient = useQueryClient()
@@ -100,6 +123,23 @@ export const useBulkUploadProducts = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.detail || "Failed to upload products")
+    },
+  })
+}
+
+// Bulk update products
+export const useBulkUpdateProducts = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (file: File) => bulkUpdateProducts(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: productKeys.stats() })
+      toast.success("Products updated successfully")
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.detail || "Failed to update products")
     },
   })
 }

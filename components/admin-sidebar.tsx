@@ -21,6 +21,7 @@ import {
   FolderTree,
   BarChart3,
   X,
+  Image,
 } from "lucide-react"
 import { getAdminInfo } from "@/lib/auth"
 import { useDashboardStats } from "@/hooks/use-dashboard"
@@ -61,6 +62,12 @@ const navigation = [
     name: "Categories",
     href: "/categories",
     icon: FolderTree,
+    current: false,
+  },
+  {
+    name: "Banners",
+    href: "/banners",
+    icon: Image,
     current: false,
   },
   {

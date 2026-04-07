@@ -43,6 +43,25 @@ export const downloadBulkTemplate = async (): Promise<{ blob: Blob; filename: st
   return { blob: response.data, filename }
 }
 
+// Download bulk update template
+export const downloadBulkUpdateTemplate = async (): Promise<{ blob: Blob; filename: string }> => {
+  const response = await api.get("/api/v1/admin/products/bulk/update-template", {
+    responseType: "blob",
+  })
+
+  const contentDisposition = response.headers["content-disposition"]
+  let filename = "bulk-update-template.xlsx"
+
+  if (contentDisposition) {
+    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+    if (filenameMatch && filenameMatch[1]) {
+      filename = filenameMatch[1].replace(/['"]/g, "")
+    }
+  }
+
+  return { blob: response.data, filename }
+}
+
 // Get product statistics
 export const getProductStats = async (): Promise<ProductStats> => {
   const { data } = await api.get("/api/v1/admin/products/stats/overview")
@@ -55,6 +74,19 @@ export const bulkUploadProducts = async (file: File): Promise<any> => {
   formData.append("file", file)
 
   const { data } = await api.post("/api/v1/admin/products/bulk/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  })
+  return data
+}
+
+// Bulk update products
+export const bulkUpdateProducts = async (file: File): Promise<any> => {
+  const formData = new FormData()
+  formData.append("file", file)
+
+  const { data } = await api.post("/api/v1/admin/products/bulk/update", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

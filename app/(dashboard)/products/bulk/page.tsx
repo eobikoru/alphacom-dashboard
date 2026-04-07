@@ -8,7 +8,12 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BulkUploadDropzone } from "@/components/bulk-upload-dropzone"
 import { toast } from "sonner"
-import { useBulkUploadProducts, useDownloadBulkTemplate } from "@/hooks/use-products"
+import {
+  useBulkUploadProducts,
+  useBulkUpdateProducts,
+  useDownloadBulkTemplate,
+  useDownloadBulkUpdateTemplate,
+} from "@/hooks/use-products"
 import { ArrowLeft, Download, CheckCircle, AlertTriangle, FileSpreadsheet, RefreshCw, Upload } from "lucide-react"
 import Link from "next/link"
 
@@ -19,7 +24,9 @@ export default function BulkUploadPage() {
   const [importedCount, setImportedCount] = useState(0)
 
   const bulkUploadMutation = useBulkUploadProducts()
+  const bulkUpdateMutation = useBulkUpdateProducts()
   const downloadTemplateMutation = useDownloadBulkTemplate()
+  const downloadBulkUpdateTemplateMutation = useDownloadBulkUpdateTemplate()
 
   const handleFileSelect = (file: File) => {
     setUploadedFile(file)
@@ -56,8 +63,42 @@ export default function BulkUploadPage() {
     }
   }
 
+  const handleBulkUpdateClick = async () => {
+    if (!uploadedFile) {
+      toast.error("Please select a file first")
+      return
+    }
+
+    setCurrentStep("processing")
+    setUploadProgress(0)
+
+    try {
+      setUploadProgress(20)
+
+      const response = await bulkUpdateMutation.mutateAsync(uploadedFile)
+
+      setUploadProgress(100)
+
+      const successCount = response.successful || response.updated || 0
+      setImportedCount(successCount)
+
+      setCurrentStep("complete")
+
+      if (response.failed && response.failed > 0) {
+        toast.warning(`${response.failed} products failed to update`)
+      }
+    } catch (error: any) {
+      console.error("[v0] Bulk update error:", error)
+      setCurrentStep("upload")
+    }
+  }
+
   const downloadTemplate = () => {
     downloadTemplateMutation.mutate()
+  }
+
+  const downloadBulkUpdateTemplate = () => {
+    downloadBulkUpdateTemplateMutation.mutate()
   }
 
   const resetUpload = () => {
@@ -67,7 +108,7 @@ export default function BulkUploadPage() {
     setImportedCount(0)
   }
 
-  const isProcessing = bulkUploadMutation.isPending
+  const isProcessing = bulkUploadMutation.isPending || bulkUpdateMutation.isPending
 
   return (
     <div className="space-y-6">
@@ -80,8 +121,8 @@ export default function BulkUploadPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Bulk Product Upload</h1>
-            <p className="text-muted-foreground">Import multiple products from CSV or Excel files</p>
+            <h1 className="text-3xl font-bold text-foreground">Bulk Product Import & Update</h1>
+            <p className="text-muted-foreground">Import new products or update existing products using Excel/CSV</p>
           </div>
         </div>
         <div className="flex items-center space-x-3">
@@ -93,6 +134,17 @@ export default function BulkUploadPage() {
           >
             <Download className="w-4 h-4" />
             <span>{downloadTemplateMutation.isPending ? "Downloading..." : "Download Template"}</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={downloadBulkUpdateTemplate}
+            disabled={downloadBulkUpdateTemplateMutation.isPending}
+            className="flex items-center space-x-2 bg-transparent"
+          >
+            <Download className="w-4 h-4" />
+            <span>
+              {downloadBulkUpdateTemplateMutation.isPending ? "Downloading..." : "Download Bulk Update Template"}
+            </span>
           </Button>
           {currentStep !== "upload" && (
             <Button variant="outline" onClick={resetUpload} className="flex items-center space-x-2 bg-transparent">
@@ -188,7 +240,16 @@ export default function BulkUploadPage() {
                         className="flex items-center space-x-2"
                       >
                         <Upload className="w-4 h-4" />
-                        <span>{isProcessing ? "Uploading..." : "Upload & Import"}</span>
+                        <span>{isProcessing ? "Processing..." : "Import New Products"}</span>
+                      </Button>
+                      <Button
+                        onClick={handleBulkUpdateClick}
+                        disabled={isProcessing}
+                        variant="default"
+                        className="flex items-center space-x-2"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>{isProcessing ? "Processing..." : "Update Existing Products"}</span>
                       </Button>
                     </div>
                   </div>

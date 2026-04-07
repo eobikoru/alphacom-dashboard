@@ -26,7 +26,13 @@ import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useProducts, useProductStats, useDownloadBulkTemplate, useDeleteProduct } from "@/hooks/use-products"
+import {
+  useProducts,
+  useProductStats,
+  useDownloadBulkTemplate,
+  useDownloadBulkUpdateTemplate,
+  useDeleteProduct,
+} from "@/hooks/use-products"
 import { ProductDetailModal } from "@/components/product-detail-modal"
 import { ProductImageModal } from "@/components/product-image-modal" // Added ProductImageModal import
 import { Pagination } from "@/components/pagination"
@@ -87,6 +93,7 @@ export default function ProductsPage() {
   const { data: stats } = useProductStats()
 
   const downloadTemplate = useDownloadBulkTemplate()
+  const downloadBulkUpdateTemplate = useDownloadBulkUpdateTemplate()
 
   const deleteProductMutation = useDeleteProduct()
 
@@ -118,6 +125,10 @@ export default function ProductsPage() {
 
   const handleDownloadTemplate = () => {
     downloadTemplate.mutate()
+  }
+
+  const handleDownloadBulkUpdateTemplate = () => {
+    downloadBulkUpdateTemplate.mutate()
   }
 
   const getStatusVariant = (status: string) => {
@@ -184,10 +195,30 @@ export default function ProductsPage() {
             )}
             <span className="hidden sm:inline">Download Template</span>
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 bg-transparent"
+            onClick={handleDownloadBulkUpdateTemplate}
+            disabled={downloadBulkUpdateTemplate.isPending}
+          >
+            {downloadBulkUpdateTemplate.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            <span className="hidden sm:inline">Download Bulk Update Template</span>
+          </Button>
           <Link href="/products/bulk">
             <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
               <Upload className="w-4 h-4" />
               <span className="hidden sm:inline">Bulk Upload</span>
+            </Button>
+          </Link>
+          <Link href="/products/bulk?mode=update">
+            <Button size="sm" className="flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Bulk Update</span>
             </Button>
           </Link>
           <Link href="/products/add">
