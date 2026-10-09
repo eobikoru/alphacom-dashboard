@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query"
 import { getDashboardStats, getRevenueTrend, getOrderStatusBreakdown, getLowStockProducts } from "@/lib/api/dashboard"
 
-export const useDashboardStats = () => {
+export const useDashboardStats = (enabled = true) => {
   return useQuery({
     queryKey: ["dashboard", "stats"],
     queryFn: getDashboardStats,
+    enabled,
   })
 }
 

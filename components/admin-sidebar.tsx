@@ -22,75 +22,79 @@ import {
   BarChart3,
   X,
   Image,
+  Newspaper,
+  type LucideIcon,
 } from "lucide-react"
 import { getAdminInfo } from "@/lib/auth"
 import { useDashboardStats } from "@/hooks/use-dashboard"
+import { useDashboardAccess } from "@/components/dashboard-access"
 
-const navigation = [
+interface NavItem {
+  name: string
+  href: string
+  icon: LucideIcon
+  badge?: string
+}
+
+const storeNavigation: NavItem[] = [
   {
     name: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    current: false,
   },
   {
     name: "Analytics",
     href: "/analytics",
     icon: BarChart3,
-    current: false,
   },
   {
     name: "Products",
     href: "/products",
     icon: Package,
-    current: false,
     badge: "dynamic", // Will be replaced with actual count
   },
   {
     name: "Add Product",
     href: "/products/add",
     icon: Plus,
-    current: false,
   },
   {
     name: "Bulk Upload",
     href: "/products/bulk",
     icon: PackagePlus,
-    current: false,
   },
   {
     name: "Categories",
     href: "/categories",
     icon: FolderTree,
-    current: false,
   },
   {
     name: "Banners",
     href: "/banners",
     icon: Image,
-    current: false,
   },
   {
     name: "Orders",
     href: "/orders",
     icon: ShoppingCart,
-    current: false,
   },
   {
     name: "Customers",
     href: "/customers",
     icon: Users,
-    current: false,
   },
 ]
 
-const secondaryNavigation = [
-  {
-    name: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
-]
+const settingsNavigation: NavItem = {
+  name: "Settings",
+  href: "/settings",
+  icon: Settings,
+}
+
+function isItemActive(pathname: string, href: string) {
+  if (href === "/blog") return pathname === "/blog" || pathname.startsWith("/blog/")
+  return pathname === href
+}
 
 interface AdminSidebarProps {
   mobileOpen?: boolean
@@ -101,8 +105,18 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
   const [collapsed, setCollapsed] = useState(false)
   const [adminInfo, setAdminInfo] = useState<any>(null)
   const pathname = usePathname()
+  const access = useDashboardAccess()
 
-  const { data: dashboardStats } = useDashboardStats()
+  const { data: dashboardStats } = useDashboardStats(access.ready && !access.blogAuthorOnly)
+
+  const navigation: NavItem[] = access.blogAuthorOnly
+    ? [{ name: "Blog", href: "/blog", icon: Newspaper }]
+    : [
+        ...storeNavigation,
+        ...(access.canManageBlog ? [{ name: "Blog", href: "/blog", icon: Newspaper }] : []),
+      ]
+
+  const secondaryNavigation = access.blogAuthorOnly ? [] : [settingsNavigation]
 
   useEffect(() => {
     setAdminInfo(getAdminInfo())
@@ -157,7 +171,7 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
           {navigation.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = isItemActive(pathname, item.href)
             const badgeValue = item.badge === "dynamic" ? dashboardStats?.total_products : item.badge
 
             return (
@@ -198,11 +212,11 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
           })}
         </nav>
 
-        <Separator className="my-4 bg-sidebar-border" />
+        {secondaryNavigation.length > 0 && <Separator className="my-4 bg-sidebar-border" />}
 
         <nav className="space-y-1">
           {secondaryNavigation.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = isItemActive(pathname, item.href)
             return (
               <Link
                 key={item.name}

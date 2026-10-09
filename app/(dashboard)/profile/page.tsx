@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { User, Mail, Building, Shield, Save } from "lucide-react"
 import { getAdminInfo, setAdminInfo, type AdminInfo } from "@/lib/auth"
+import { getDashboardAccess } from "@/lib/roles"
 import { toast } from "sonner"
 
 export default function ProfilePage() {
@@ -60,6 +61,8 @@ export default function ProfilePage() {
     setIsEditing(false)
   }
 
+  const access = adminInfo ? getDashboardAccess(adminInfo) : null
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -82,12 +85,27 @@ export default function ProfilePage() {
               </h2>
               <p className="text-sm text-muted-foreground">{adminInfo?.email || "admin@alphacom.com"}</p>
             </div>
-            {adminInfo?.is_super_admin && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
-                <Shield className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium text-primary">Super Admin</span>
+            {access ? (
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {access.isSuperAdmin && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">Super Admin</span>
+                  </div>
+                )}
+                {access.isAdmin && !access.isSuperAdmin && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
+                    <Shield className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium text-primary">Admin</span>
+                  </div>
+                )}
+                {adminInfo?.is_blog_author && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
+                    <span className="text-sm font-medium text-primary">Blog author</span>
+                  </div>
+                )}
               </div>
-            )}
+            ) : null}
           </div>
         </Card>
 

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { useRouter, useParams, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import Link from "next/link"
 import { useProduct, useUpdateProduct } from "@/hooks/use-products"
 import { useCategories, useSubcategories } from "@/hooks/use-categories"
 
-export default function EditProductPage() {
+function EditProductPage() {
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
@@ -348,5 +348,13 @@ export default function EditProductPage() {
         </div>
       </form>
     </div>
+  )
+}
+
+export default function EditProductRoute() {
+  return (
+    <Suspense fallback={<p className="text-sm text-muted-foreground">Loading product…</p>}>
+      <EditProductPage />
+    </Suspense>
   )
 }

@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, EyeOff, Shield } from "lucide-react"
 import { useMutation } from "@tanstack/react-query"
 import { loginAdmin, setAuthTokens, setAdminInfo } from "@/lib/auth"
+import { getDashboardAccess } from "@/lib/roles"
 import { toast } from "sonner"
 
 export default function AdminLoginPage() {
@@ -35,8 +36,8 @@ export default function AdminLoginPage() {
         description: `Welcome back, ${data.admin_info.first_name}!`,
       })
 
-      // Redirect to dashboard
-      router.push("/dashboard")
+      const access = getDashboardAccess(data.admin_info)
+      router.push(access.blogAuthorOnly ? "/blog" : "/dashboard")
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.detail || "Invalid credentials. Please try again."

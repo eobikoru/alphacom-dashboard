@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,7 +37,7 @@ import { ProductDetailModal } from "@/components/product-detail-modal"
 import { ProductImageModal } from "@/components/product-image-modal" // Added ProductImageModal import
 import { Pagination } from "@/components/pagination"
 
-export default function ProductsPage() {
+function ProductsPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pageFromUrl = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1)
@@ -586,5 +586,13 @@ export default function ProductsPage() {
         }}
       />
     </div>
+  )
+}
+
+export default function ProductsRoute() {
+  return (
+    <Suspense fallback={<p className="text-sm text-muted-foreground">Loading products…</p>}>
+      <ProductsPage />
+    </Suspense>
   )
 }

@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { logoutAdmin, getAdminInfo } from "@/lib/auth"
+import { useDashboardAccess } from "@/components/dashboard-access"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useState, useEffect } from "react"
@@ -26,6 +27,7 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const [adminInfo, setAdminInfo] = useState<any>(null)
+  const access = useDashboardAccess()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [searchFocused, setSearchFocused] = useState(false)
@@ -48,7 +50,8 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery)}`)
+      const query = encodeURIComponent(searchQuery.trim())
+      router.push(access.blogAuthorOnly ? `/blog?search=${query}` : `/products?search=${query}`)
     }
   }
 
@@ -78,7 +81,7 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
         <form onSubmit={handleSearch} className={cn("relative flex-1 min-w-0", searchFocused ? "max-w-full" : "max-w-full sm:max-w-md")}>
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 shrink-0" />
           <Input
-            placeholder="Search products..."
+            placeholder={access.blogAuthorOnly ? "Search posts..." : "Search products..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setSearchFocused(true)}
@@ -143,10 +146,12 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
               <User className="w-4 h-4 mr-2" />
               Profile Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/settings")}>
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </DropdownMenuItem>
+            {access.blogAuthorOnly ? null : (
+              <DropdownMenuItem onClick={() => router.push("/settings")}>
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem>
               <Bell className="w-4 h-4 mr-2" />
               Notifications
