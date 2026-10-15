@@ -44,8 +44,8 @@ export const blogKeys = {
   posts: (params: GetBlogPostsParams) => ["blog", "posts", params] as const,
   post: (id: string) => ["blog", "post", id] as const,
   categories: ["blog", "categories"] as const,
-  faqs: ["blog", "faqs"] as const,
-  faq: (id: string) => ["blog", "faq", id] as const,
+  faqs: (postId: string) => ["blog", "post", postId, "faqs"] as const,
+  faq: (postId: string, faqId: string) => ["blog", "post", postId, "faq", faqId] as const,
   comments: (params: GetBlogCommentsParams) => ["blog", "comments", params] as const,
   authors: ["blog", "authors"] as const,
 }
@@ -180,54 +180,59 @@ export const useUpdateBlogCategory = () => {
   })
 }
 
-export const useBlogFaqs = (enabled = true) => {
+function invalidatePostFaqs(queryClient: ReturnType<typeof useQueryClient>, postId: string, faqId?: string) {
+  queryClient.invalidateQueries({ queryKey: blogKeys.post(postId) })
+  queryClient.invalidateQueries({ queryKey: blogKeys.faqs(postId) })
+  if (faqId) queryClient.invalidateQueries({ queryKey: blogKeys.faq(postId, faqId) })
+}
+
+export const useBlogFaqs = (postId: string, enabled = true) => {
   return useQuery({
-    queryKey: blogKeys.faqs,
-    queryFn: getBlogFaqs,
-    enabled,
+    queryKey: blogKeys.faqs(postId),
+    queryFn: () => getBlogFaqs(postId),
+    enabled: enabled && Boolean(postId),
   })
 }
 
-export const useBlogFaq = (id: string) => {
+export const useBlogFaq = (postId: string, faqId: string) => {
   return useQuery({
-    queryKey: blogKeys.faq(id),
-    queryFn: () => getBlogFaq(id),
-    enabled: Boolean(id),
+    queryKey: blogKeys.faq(postId, faqId),
+    queryFn: () => getBlogFaq(postId, faqId),
+    enabled: Boolean(postId) && Boolean(faqId),
     retry: false,
   })
 }
 
-export const useCreateBlogFaq = () => {
+export const useCreateBlogFaq = (postId: string) => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: BlogFaqWrite) => createBlogFaq(data),
+    mutationFn: (data: BlogFaqWrite) => createBlogFaq(postId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: blogKeys.faqs })
+      invalidatePostFaqs(queryClient, postId)
       toast.success("FAQ created")
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Could not create the FAQ.")),
   })
 }
 
-export const useUpdateBlogFaq = () => {
+export const useUpdateBlogFaq = (postId: string) => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: BlogFaqWrite }) => updateBlogFaq(id, data),
+    mutationFn: ({ faqId, data }: { faqId: string; data: BlogFaqWrite }) => updateBlogFaq(postId, faqId, data),
     onSuccess: (_faq, variables) => {
-      queryClient.invalidateQueries({ queryKey: blogKeys.faqs })
-      queryClient.invalidateQueries({ queryKey: blogKeys.faq(variables.id) })
+      invalidatePostFaqs(queryClient, postId, variables.faqId)
       toast.success("FAQ updated")
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Could not update the FAQ.")),
   })
 }
 
-export const useDeleteBlogFaq = () => {
+export const useDeleteBlogFaq = (postId: string) => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => deleteBlogFaq(id),
+    mutationFn: (faqId: string) => deleteBlogFaq(postId, faqId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: blogKeys.faqs })
+      invalidatePostFaqs(queryClient, postId)
       toast.success("FAQ deleted")
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Could not delete the FAQ.")),

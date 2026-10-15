@@ -114,9 +114,25 @@ export const getBlogPosts = async (params: GetBlogPostsParams = {}): Promise<Blo
   return normalizeList<BlogPost>(response.data, ["posts", "items", "results"])
 }
 
+function faqsFromPayload(payload: unknown): BlogFaq[] | undefined {
+  const root = asRecord(payload) ?? {}
+  const data = asRecord(root.data) ?? root
+  const post = asRecord(data.post)
+  const candidates = [post?.faqs, data.faqs, root.faqs]
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate as BlogFaq[]
+  }
+  return undefined
+}
+
 export const getBlogPost = async (id: string): Promise<BlogPost> => {
   const response = await api.get(`/api/v1/admin/blog/posts/${id}`)
-  return normalizeEntity<BlogPost>(response.data, ["post"])
+  const post = normalizeEntity<BlogPost>(response.data, ["post"])
+  if (!Array.isArray(post.faqs)) {
+    const faqs = faqsFromPayload(response.data)
+    if (faqs) post.faqs = faqs
+  }
+  return post
 }
 
 export const createBlogPost = async (data: BlogPostWrite): Promise<BlogPost> => {
@@ -179,28 +195,28 @@ export const deleteBlogCategory = async (id: string): Promise<void> => {
   await api.delete(`/api/v1/admin/blog/categories/${id}`)
 }
 
-export const getBlogFaqs = async (): Promise<BlogFaq[]> => {
-  const response = await api.get("/api/v1/admin/blog/faqs")
+export const getBlogFaqs = async (postId: string): Promise<BlogFaq[]> => {
+  const response = await api.get(`/api/v1/admin/blog/posts/${postId}/faqs`)
   return normalizeList<BlogFaq>(response.data, ["faqs", "items", "results"]).items
 }
 
-export const getBlogFaq = async (id: string): Promise<BlogFaq> => {
-  const response = await api.get(`/api/v1/admin/blog/faqs/${id}`)
+export const getBlogFaq = async (postId: string, faqId: string): Promise<BlogFaq> => {
+  const response = await api.get(`/api/v1/admin/blog/posts/${postId}/faqs/${faqId}`)
   return normalizeEntity<BlogFaq>(response.data, ["faq"])
 }
 
-export const createBlogFaq = async (data: BlogFaqWrite): Promise<BlogFaq> => {
-  const response = await api.post("/api/v1/admin/blog/faqs", data)
+export const createBlogFaq = async (postId: string, data: BlogFaqWrite): Promise<BlogFaq> => {
+  const response = await api.post(`/api/v1/admin/blog/posts/${postId}/faqs`, data)
   return normalizeEntity<BlogFaq>(response.data, ["faq"])
 }
 
-export const updateBlogFaq = async (id: string, data: BlogFaqWrite): Promise<BlogFaq> => {
-  const response = await api.put(`/api/v1/admin/blog/faqs/${id}`, data)
+export const updateBlogFaq = async (postId: string, faqId: string, data: BlogFaqWrite): Promise<BlogFaq> => {
+  const response = await api.put(`/api/v1/admin/blog/posts/${postId}/faqs/${faqId}`, data)
   return normalizeEntity<BlogFaq>(response.data, ["faq"])
 }
 
-export const deleteBlogFaq = async (id: string): Promise<void> => {
-  await api.delete(`/api/v1/admin/blog/faqs/${id}`)
+export const deleteBlogFaq = async (postId: string, faqId: string): Promise<void> => {
+  await api.delete(`/api/v1/admin/blog/posts/${postId}/faqs/${faqId}`)
 }
 
 export const getBlogComments = async (params: GetBlogCommentsParams = {}): Promise<BlogListResult<BlogComment>> => {

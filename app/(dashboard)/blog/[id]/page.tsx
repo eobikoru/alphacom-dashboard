@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import { ArrowLeft, Pencil, Star } from "lucide-react"
 import { BlogPageFrame } from "@/components/blog/blog-page-frame"
+import { PostFaqs } from "@/components/blog/post-faqs"
 import { useDashboardAccess } from "@/components/dashboard-access"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -88,6 +89,8 @@ export default function ViewBlogPostPage() {
               ))}
             </div>
           ) : null}
+
+          <PostFaqs postId={post.id} initialFaqs={post.faqs} />
         </article>
       ) : null}
     </BlogPageFrame>

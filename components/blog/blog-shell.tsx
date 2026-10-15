@@ -3,7 +3,7 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { CircleHelp, MessageSquare, Newspaper, Tags, UserPlus, type LucideIcon } from "lucide-react"
+import { MessageSquare, Newspaper, Tags, UserPlus, type LucideIcon } from "lucide-react"
 import { useDashboardAccess } from "@/components/dashboard-access"
 import { cn } from "@/lib/utils"
 
@@ -21,7 +21,6 @@ function isPostsPath(pathname: string) {
     (pathname.startsWith("/blog/") &&
       !pathname.startsWith("/blog/categories") &&
       !pathname.startsWith("/blog/comments") &&
-      !pathname.startsWith("/blog/faqs") &&
       !pathname.startsWith("/blog/authors"))
   )
 }
@@ -45,12 +44,6 @@ export function BlogShell({ children }: { children: ReactNode }) {
             href: "/blog/comments",
             icon: MessageSquare,
             active: (path: string) => path.startsWith("/blog/comments"),
-          },
-          {
-            name: "FAQs",
-            href: "/blog/faqs",
-            icon: CircleHelp,
-            active: (path: string) => path.startsWith("/blog/faqs"),
           },
         ]
       : []),

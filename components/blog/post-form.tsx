@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import { CoverImageField } from "@/components/blog/cover-image-field"
+import { PostFaqs } from "@/components/blog/post-faqs"
 import { RichTextEditor } from "@/components/blog/rich-text-editor"
 import { useDashboardAccess } from "@/components/dashboard-access"
 import { Badge } from "@/components/ui/badge"
@@ -378,6 +379,17 @@ export function PostForm({ mode, post }: PostFormProps) {
           </Card>
         </div>
       </div>
+
+      {post?.id ? (
+        <PostFaqs postId={post.id} initialFaqs={post.faqs} />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>FAQs</CardTitle>
+            <CardDescription>Save the post first. FAQs are added on the saved post.</CardDescription>
+          </CardHeader>
+        </Card>
+      )}
     </form>
   )
 }

@@ -31,6 +31,7 @@ export interface BlogPost {
   cover_image_public_id?: string | null
   view_count?: number
   comment_count?: number
+  faqs?: BlogFaq[]
   created_at?: string
   updated_at?: string
   [key: string]: unknown
