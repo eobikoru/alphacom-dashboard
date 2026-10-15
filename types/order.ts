@@ -1,5 +1,6 @@
 export type OrderStatus =
   | "pending"
+  | "processing"
   | "completed"
   | "failed"
   | "refunded"
@@ -8,6 +9,7 @@ export type OrderStatus =
   | "delivered"
   | "cancelled"
 export type PaymentStatus = "pending" | "completed" | "failed" | "refunded" | "partially_refunded"
+export type OrderMode = "transfer" | "paystack"
 
 export interface ShippingAddress {
   street: string
@@ -33,6 +35,7 @@ export interface Order {
   order_number: string
   status: OrderStatus
   payment_status: PaymentStatus
+  mode: OrderMode | null
   customer_email: string
   customer_name: string
   customer_phone: string
@@ -77,6 +80,11 @@ export interface CancelOrderRequest {
 export interface RefundOrderRequest {
   reason: string
   amount?: number | null
+}
+
+export interface ConfirmTransferRequest {
+  transfer_reference: string
+  note?: string
 }
 
 export interface ReleaseExpiredResponse {

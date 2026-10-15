@@ -1,16 +1,19 @@
 "use client"
 
+import { useState } from "react"
 import { useOrderDetails, useDeliverOrder } from "@/hooks/use-orders"
+import { ConfirmTransferModal } from "@/components/confirm-transfer-modal"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Package, Truck, MapPin, CreditCard, User, Phone, Mail } from "lucide-react"
+import { Package, Truck, MapPin, CreditCard, User, Phone, Mail, Landmark } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { OrderStatus, PaymentStatus } from "@/types/order"
 
 const statusColors: Record<OrderStatus, string> = {
   pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  processing: "bg-blue-100 text-blue-800 border-blue-200",
   completed: "bg-green-100 text-green-800 border-green-200",
   shipped: "bg-blue-100 text-blue-800 border-blue-200",
   delivered: "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -37,6 +40,7 @@ interface OrderDetailsModalProps {
 export function OrderDetailsModal({ orderId, open, onOpenChange }: OrderDetailsModalProps) {
   const { data: order, isLoading } = useOrderDetails(orderId)
   const deliverMutation = useDeliverOrder()
+  const [confirmTransferOpen, setConfirmTransferOpen] = useState(false)
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat("en-NG", {
@@ -92,6 +96,7 @@ export function OrderDetailsModal({ orderId, open, onOpenChange }: OrderDetailsM
                 <Badge variant="outline" className={paymentStatusColors[order.payment_status]}>
                   {order.payment_status}
                 </Badge>
+                <Badge variant="outline">{order.mode === "transfer" ? "Transfer" : order.mode === "paystack" ? "Paystack" : "No payment mode"}</Badge>
               </div>
             </div>
 
@@ -225,6 +230,13 @@ export function OrderDetailsModal({ orderId, open, onOpenChange }: OrderDetailsM
               </>
             )}
 
+            {order.mode === "transfer" && order.payment_status !== "completed" && (
+              <Button onClick={() => setConfirmTransferOpen(true)} className="w-full">
+                <Landmark className="mr-2 h-4 w-4" />
+                Confirm transfer
+              </Button>
+            )}
+
             {order.status === "shipped" && (
               <Button onClick={handleDeliver} disabled={deliverMutation.isPending} className="w-full">
                 <Package className="mr-2 h-4 w-4" />
@@ -235,6 +247,7 @@ export function OrderDetailsModal({ orderId, open, onOpenChange }: OrderDetailsM
         ) : (
           <p className="text-center text-muted-foreground py-8">Order not found</p>
         )}
+        <ConfirmTransferModal orderId={orderId} open={confirmTransferOpen} onOpenChange={setConfirmTransferOpen} />
       </DialogContent>
     </Dialog>
   )

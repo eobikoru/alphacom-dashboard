@@ -8,12 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Search, RefreshCw, Eye, Package, Truck, XCircle, DollarSign, Clock } from "lucide-react"
+import { Search, RefreshCw, Eye, Package, Truck, XCircle, DollarSign, Clock, Landmark } from "lucide-react"
 import { OrderDetailsModal } from "@/components/order-details-modal"
 import { ShipOrderModal } from "@/components/ship-order-modal"
 import { DeliverOrderModal } from "@/components/deliver-order-modal"
 import { CancelOrderModal } from "@/components/cancel-order-modal"
 import { RefundOrderModal } from "@/components/refund-order-modal"
+import { ConfirmTransferModal } from "@/components/confirm-transfer-modal"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Pagination } from "@/components/pagination"
 import type { OrderStatus, PaymentStatus } from "@/types/order"
@@ -52,6 +53,7 @@ export default function OrdersPage() {
   const [deliverModalOpen, setDeliverModalOpen] = useState(false)
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
   const [refundModalOpen, setRefundModalOpen] = useState(false)
+  const [confirmTransferOpen, setConfirmTransferOpen] = useState(false)
 
   const { data, isLoading } = useOrders({
     page,
@@ -60,7 +62,6 @@ export default function OrdersPage() {
     payment_status: paymentStatus || undefined,
     search: search || undefined,
   })
-  console.log(data, "data")
   const releaseExpiredMutation = useReleaseExpiredReservations()
 
   const handleSearch = () => {
@@ -124,6 +125,11 @@ export default function OrdersPage() {
   const openRefundModal = (orderId: string) => {
     setSelectedOrderId(orderId)
     setRefundModalOpen(true)
+  }
+
+  const openConfirmTransfer = (orderId: string) => {
+    setSelectedOrderId(orderId)
+    setConfirmTransferOpen(true)
   }
 
   return (
@@ -223,6 +229,7 @@ export default function OrdersPage() {
                 <TableHead>Customer</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Payment</TableHead>
+                <TableHead>Mode</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -245,6 +252,9 @@ export default function OrdersPage() {
                       <Skeleton className="h-6 w-20" />
                     </TableCell>
                     <TableCell>
+                      <Skeleton className="h-6 w-20" />
+                    </TableCell>
+                    <TableCell>
                       <Skeleton className="h-4 w-24" />
                     </TableCell>
                     <TableCell>
@@ -257,7 +267,7 @@ export default function OrdersPage() {
                 ))
               ) : data?.orders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                     No orders found
                   </TableCell>
                 </TableRow>
@@ -281,13 +291,30 @@ export default function OrdersPage() {
                         {order.payment_status}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      {order.mode ? (
+                        <Badge variant="outline">{order.mode === "transfer" ? "Transfer" : "Paystack"}</Badge>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell className="font-medium">{formatCurrency(order.total_amount, order.currency)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{formatDate(order.created_at)}</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => openDetailsModal(order.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => openDetailsModal(order.id)} aria-label="View order">
                           <Eye className="h-4 w-4" />
                         </Button>
+                        {order.mode === "transfer" && order.payment_status !== "completed" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openConfirmTransfer(order.id)}
+                            aria-label="Confirm transfer"
+                          >
+                            <Landmark className="h-4 w-4" />
+                          </Button>
+                        )}
                         {order.status === "processing" && (
                           <Button variant="ghost" size="sm" onClick={() => openShipModal(order.id)}>
                             <Truck className="h-4 w-4" />
@@ -353,6 +380,7 @@ export default function OrdersPage() {
           <DeliverOrderModal orderId={selectedOrderId} open={deliverModalOpen} onOpenChange={setDeliverModalOpen} />
           <CancelOrderModal orderId={selectedOrderId} open={cancelModalOpen} onOpenChange={setCancelModalOpen} />
           <RefundOrderModal orderId={selectedOrderId} open={refundModalOpen} onOpenChange={setRefundModalOpen} />
+          <ConfirmTransferModal orderId={selectedOrderId} open={confirmTransferOpen} onOpenChange={setConfirmTransferOpen} />
         </>
       )}
     </div>

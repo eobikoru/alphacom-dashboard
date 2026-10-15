@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import { Loader2 } from "lucide-react"
 import { BlogPageFrame } from "@/components/blog/blog-page-frame"
 import { ListPager } from "@/components/blog/list-pager"
 import { useDashboardAccess } from "@/components/dashboard-access"
@@ -51,6 +52,8 @@ function BlogCommentsPage() {
   const hide = useHideBlogComment()
   const unhide = useUnhideBlogComment()
   const remove = useDeleteBlogComment()
+  const hidingId = hide.isPending ? hide.variables : null
+  const unhidingId = unhide.isPending ? unhide.variables : null
 
   return (
     <BlogPageFrame allow={access.canModerateBlog} title="Comment moderation is for admins.">
@@ -136,12 +139,14 @@ function BlogCommentsPage() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           {comment.is_hidden ? (
-                            <Button size="sm" variant="outline" disabled={unhide.isPending} onClick={() => unhide.mutate(comment.id)}>
-                              Unhide
+                            <Button size="sm" variant="outline" disabled={unhidingId === comment.id} onClick={() => unhide.mutate(comment.id)}>
+                              {unhidingId === comment.id ? <Loader2 className="size-4 animate-spin" /> : null}
+                              {unhidingId === comment.id ? "Unhiding..." : "Unhide"}
                             </Button>
                           ) : (
-                            <Button size="sm" variant="outline" disabled={hide.isPending} onClick={() => hide.mutate(comment.id)}>
-                              Hide
+                            <Button size="sm" variant="outline" disabled={hidingId === comment.id} onClick={() => hide.mutate(comment.id)}>
+                              {hidingId === comment.id ? <Loader2 className="size-4 animate-spin" /> : null}
+                              {hidingId === comment.id ? "Hiding..." : "Hide"}
                             </Button>
                           )}
                           <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(comment)}>
@@ -159,21 +164,24 @@ function BlogCommentsPage() {
         </Card>
       </div>
 
-      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && !remove.isPending && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this comment?</AlertDialogTitle>
             <AlertDialogDescription>The comment is removed rather than hidden.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={remove.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                if (deleteTarget) remove.mutate(deleteTarget.id)
-                setDeleteTarget(null)
+              disabled={remove.isPending}
+              onClick={(event) => {
+                event.preventDefault()
+                if (!deleteTarget || remove.isPending) return
+                remove.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) })
               }}
             >
-              Delete
+              {remove.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {remove.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

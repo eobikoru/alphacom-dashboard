@@ -3,8 +3,10 @@ import { toast } from "sonner"
 import {
   createBlogAuthor,
   createBlogCategory,
+  createBlogFaq,
   createBlogPost,
   deleteBlogCategory,
+  deleteBlogFaq,
   deleteBlogComment,
   deleteBlogCover,
   deleteBlogPost,
@@ -14,18 +16,22 @@ import {
   getBlogAuthors,
   getBlogCategories,
   getBlogComments,
+  getBlogFaq,
+  getBlogFaqs,
   getBlogPost,
   getBlogPosts,
   hideBlogComment,
   unhideBlogComment,
   updateBlogAuthorRole,
   updateBlogCategory,
+  updateBlogFaq,
   updateBlogPost,
   updateBlogPostStatus,
   uploadBlogCover,
 } from "@/lib/api/blog"
 import type {
   BlogCategoryWrite,
+  BlogFaqWrite,
   BlogPostStatus,
   BlogPostWrite,
   CreateBlogAuthorData,
@@ -38,6 +44,8 @@ export const blogKeys = {
   posts: (params: GetBlogPostsParams) => ["blog", "posts", params] as const,
   post: (id: string) => ["blog", "post", id] as const,
   categories: ["blog", "categories"] as const,
+  faqs: ["blog", "faqs"] as const,
+  faq: (id: string) => ["blog", "faq", id] as const,
   comments: (params: GetBlogCommentsParams) => ["blog", "comments", params] as const,
   authors: ["blog", "authors"] as const,
 }
@@ -169,6 +177,60 @@ export const useUpdateBlogCategory = () => {
       toast.success("Category updated")
     },
     onError: (error) => toast.error(getApiErrorMessage(error, "Could not update the category.")),
+  })
+}
+
+export const useBlogFaqs = (enabled = true) => {
+  return useQuery({
+    queryKey: blogKeys.faqs,
+    queryFn: getBlogFaqs,
+    enabled,
+  })
+}
+
+export const useBlogFaq = (id: string) => {
+  return useQuery({
+    queryKey: blogKeys.faq(id),
+    queryFn: () => getBlogFaq(id),
+    enabled: Boolean(id),
+    retry: false,
+  })
+}
+
+export const useCreateBlogFaq = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data: BlogFaqWrite) => createBlogFaq(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: blogKeys.faqs })
+      toast.success("FAQ created")
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error, "Could not create the FAQ.")),
+  })
+}
+
+export const useUpdateBlogFaq = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: BlogFaqWrite }) => updateBlogFaq(id, data),
+    onSuccess: (_faq, variables) => {
+      queryClient.invalidateQueries({ queryKey: blogKeys.faqs })
+      queryClient.invalidateQueries({ queryKey: blogKeys.faq(variables.id) })
+      toast.success("FAQ updated")
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error, "Could not update the FAQ.")),
+  })
+}
+
+export const useDeleteBlogFaq = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => deleteBlogFaq(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: blogKeys.faqs })
+      toast.success("FAQ deleted")
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error, "Could not delete the FAQ.")),
   })
 }
 

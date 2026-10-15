@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Eye, EyeOff, Plus } from "lucide-react"
+import { Eye, EyeOff, Loader2, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { BlogPageFrame } from "@/components/blog/blog-page-frame"
 import { useDashboardAccess } from "@/components/dashboard-access"
@@ -162,17 +162,18 @@ export default function BlogAuthorsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={createAuthor.isPending}>
               Cancel
             </Button>
             <Button onClick={() => void save()} disabled={createAuthor.isPending}>
-              Create author
+              {createAuthor.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {createAuthor.isPending ? "Creating..." : "Create author"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={Boolean(pending)} onOpenChange={(open) => !open && setPending(null)}>
+      <AlertDialog open={Boolean(pending)} onOpenChange={(open) => !open && !updateRole.isPending && setPending(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{pending?.next ? "Restore blog access?" : "Revoke blog access?"}</AlertDialogTitle>
@@ -183,15 +184,21 @@ export default function BlogAuthorsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={updateRole.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
+              disabled={updateRole.isPending}
+              onClick={(event) => {
+                event.preventDefault()
                 const userId = pending ? blogAuthorKey(pending.author) : ""
-                if (pending && userId) updateRole.mutate({ userId, isBlogAuthor: pending.next })
-                setPending(null)
+                if (!pending || !userId || updateRole.isPending) return
+                updateRole.mutate(
+                  { userId, isBlogAuthor: pending.next },
+                  { onSuccess: () => setPending(null) },
+                )
               }}
             >
-              Confirm
+              {updateRole.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {updateRole.isPending ? "Saving..." : "Confirm"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

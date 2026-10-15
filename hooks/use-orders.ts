@@ -6,9 +6,10 @@ import {
   deliverOrder,
   cancelOrder,
   refundOrder,
+  confirmTransfer,
   releaseExpiredReservations,
 } from "@/lib/api/orders"
-import type { ShipOrderRequest, CancelOrderRequest, RefundOrderRequest } from "@/types/order"
+import type { ShipOrderRequest, CancelOrderRequest, RefundOrderRequest, ConfirmTransferRequest } from "@/types/order"
 import { toast } from "sonner"
 
 export const orderKeys = {
@@ -100,6 +101,23 @@ export const useRefundOrder = () => {
     },
     onError: () => {
       toast.error("Failed to refund order")
+    },
+  })
+}
+
+export const useConfirmTransfer = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ orderId, data }: { orderId: string; data: ConfirmTransferRequest }) => confirmTransfer(orderId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: orderKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.orderId) })
+      toast.success("Transfer confirmed. Payment is completed and the order is processing.")
+    },
+    onError: (error: unknown) => {
+      const detail = (error as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
+      toast.error(typeof detail === "string" ? detail : "Could not confirm this transfer")
     },
   })
 }

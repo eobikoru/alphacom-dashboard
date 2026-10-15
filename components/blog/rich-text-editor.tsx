@@ -407,7 +407,8 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
               Skip
             </Button>
             <Button type="button" onClick={insertCurrentImage} disabled={uploading || !currentImage}>
-              {uploading ? "Uploading…" : "Insert"}
+              {uploading ? <Loader2 className="size-4 animate-spin" /> : null}
+              {uploading ? "Uploading..." : "Insert"}
             </Button>
           </DialogFooter>
         </DialogContent>

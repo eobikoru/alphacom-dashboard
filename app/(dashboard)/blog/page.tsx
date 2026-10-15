@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { MoreHorizontal, Plus, Search, Star } from "lucide-react"
+import { Loader2, MoreHorizontal, Plus, Search, Star } from "lucide-react"
 import { BlogPageFrame } from "@/components/blog/blog-page-frame"
 import { ListPager } from "@/components/blog/list-pager"
 import { useDashboardAccess } from "@/components/dashboard-access"
@@ -80,6 +80,7 @@ function BlogPostsPage() {
   const categories = useBlogCategories(access.ready && access.canModerateBlog)
   const changeStatus = useBlogPostStatus()
   const deletePost = useDeleteBlogPost()
+  const statusPendingId = changeStatus.isPending ? changeStatus.variables?.id : null
 
   return (
     <BlogPageFrame allow={access.canManageBlog} title="Blog posts are available to blog authors and admins.">
@@ -169,6 +170,7 @@ function BlogPostsPage() {
                 <TableBody>
                   {posts.data.items.map((post) => {
                     const cover = coverImageUrl(post)
+                    const rowBusy = statusPendingId === post.id
                     return (
                       <TableRow key={post.id}>
                         <TableCell>
@@ -205,8 +207,8 @@ function BlogPostsPage() {
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" aria-label={`Actions for ${post.title}`}>
-                                <MoreHorizontal className="size-4" />
+                              <Button variant="ghost" size="icon" aria-label={`Actions for ${post.title}`} disabled={rowBusy}>
+                                {rowBusy ? <Loader2 className="size-4 animate-spin" /> : <MoreHorizontal className="size-4" />}
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -217,20 +219,20 @@ function BlogPostsPage() {
                                 <Link href={`/blog/${post.id}/edit`}>Edit</Link>
                               </DropdownMenuItem>
                               {post.status === "published" ? (
-                                <DropdownMenuItem onSelect={() => changeStatus.mutate({ id: post.id, action: "draft" })}>
+                                <DropdownMenuItem disabled={changeStatus.isPending} onSelect={() => changeStatus.mutate({ id: post.id, action: "draft" })}>
                                   Move to draft
                                 </DropdownMenuItem>
                               ) : (
-                                <DropdownMenuItem onSelect={() => changeStatus.mutate({ id: post.id, action: "enable" })}>
+                                <DropdownMenuItem disabled={changeStatus.isPending} onSelect={() => changeStatus.mutate({ id: post.id, action: "enable" })}>
                                   Publish
                                 </DropdownMenuItem>
                               )}
                               {post.status === "archived" ? (
-                                <DropdownMenuItem onSelect={() => changeStatus.mutate({ id: post.id, action: "draft" })}>
+                                <DropdownMenuItem disabled={changeStatus.isPending} onSelect={() => changeStatus.mutate({ id: post.id, action: "draft" })}>
                                   Move to draft
                                 </DropdownMenuItem>
                               ) : (
-                                <DropdownMenuItem onSelect={() => changeStatus.mutate({ id: post.id, action: "disable" })}>
+                                <DropdownMenuItem disabled={changeStatus.isPending} onSelect={() => changeStatus.mutate({ id: post.id, action: "disable" })}>
                                   Archive
                                 </DropdownMenuItem>
                               )}
@@ -252,21 +254,24 @@ function BlogPostsPage() {
         </Card>
       </div>
 
-      <AlertDialog open={Boolean(deleteId)} onOpenChange={(open) => !open && setDeleteId(null)}>
+      <AlertDialog open={Boolean(deleteId)} onOpenChange={(open) => !open && !deletePost.isPending && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this post?</AlertDialogTitle>
             <AlertDialogDescription>This removes the post. The action cannot be undone from the dashboard.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deletePost.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                if (deleteId) deletePost.mutate(deleteId)
-                setDeleteId(null)
+              disabled={deletePost.isPending}
+              onClick={(event) => {
+                event.preventDefault()
+                if (!deleteId || deletePost.isPending) return
+                deletePost.mutate(deleteId, { onSuccess: () => setDeleteId(null) })
               }}
             >
-              Delete
+              {deletePost.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {deletePost.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

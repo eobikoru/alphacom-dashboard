@@ -4,6 +4,8 @@ import type {
   BlogCategory,
   BlogCategoryWrite,
   BlogComment,
+  BlogFaq,
+  BlogFaqWrite,
   BlogListResult,
   BlogPost,
   BlogPostStatus,
@@ -175,6 +177,30 @@ export const updateBlogCategory = async (id: string, data: BlogCategoryWrite): P
 
 export const deleteBlogCategory = async (id: string): Promise<void> => {
   await api.delete(`/api/v1/admin/blog/categories/${id}`)
+}
+
+export const getBlogFaqs = async (): Promise<BlogFaq[]> => {
+  const response = await api.get("/api/v1/admin/blog/faqs")
+  return normalizeList<BlogFaq>(response.data, ["faqs", "items", "results"]).items
+}
+
+export const getBlogFaq = async (id: string): Promise<BlogFaq> => {
+  const response = await api.get(`/api/v1/admin/blog/faqs/${id}`)
+  return normalizeEntity<BlogFaq>(response.data, ["faq"])
+}
+
+export const createBlogFaq = async (data: BlogFaqWrite): Promise<BlogFaq> => {
+  const response = await api.post("/api/v1/admin/blog/faqs", data)
+  return normalizeEntity<BlogFaq>(response.data, ["faq"])
+}
+
+export const updateBlogFaq = async (id: string, data: BlogFaqWrite): Promise<BlogFaq> => {
+  const response = await api.put(`/api/v1/admin/blog/faqs/${id}`, data)
+  return normalizeEntity<BlogFaq>(response.data, ["faq"])
+}
+
+export const deleteBlogFaq = async (id: string): Promise<void> => {
+  await api.delete(`/api/v1/admin/blog/faqs/${id}`)
 }
 
 export const getBlogComments = async (params: GetBlogCommentsParams = {}): Promise<BlogListResult<BlogComment>> => {

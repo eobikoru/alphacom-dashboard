@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Pencil, Plus, Trash2 } from "lucide-react"
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react"
 import { BlogPageFrame } from "@/components/blog/blog-page-frame"
 import { useDashboardAccess } from "@/components/dashboard-access"
 import {
@@ -213,31 +213,35 @@ export default function BlogCategoriesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={createCategory.isPending || updateCategory.isPending}>
               Cancel
             </Button>
             <Button onClick={() => void save()} disabled={createCategory.isPending || updateCategory.isPending}>
-              Save
+              {createCategory.isPending || updateCategory.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {createCategory.isPending || updateCategory.isPending ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && !deleteCategory.isPending && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
             <AlertDialogDescription>Posts in this category stay up. They just lose the category.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleteCategory.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                if (deleteTarget) deleteCategory.mutate(deleteTarget.id)
-                setDeleteTarget(null)
+              disabled={deleteCategory.isPending}
+              onClick={(event) => {
+                event.preventDefault()
+                if (!deleteTarget || deleteCategory.isPending) return
+                deleteCategory.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) })
               }}
             >
-              Delete
+              {deleteCategory.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+              {deleteCategory.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

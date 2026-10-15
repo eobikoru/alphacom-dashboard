@@ -31,7 +31,7 @@ export function getDashboardAccess(info: RoleFlags | null | undefined): Dashboar
   }
 }
 
-const blockedAuthorPaths = ["/blog/categories", "/blog/comments", "/blog/authors"]
+const blockedAuthorPaths = ["/blog/categories", "/blog/comments", "/blog/faqs", "/blog/authors"]
 
 export function blogAuthorCanVisit(pathname: string) {
   if (pathname === "/profile" || pathname.startsWith("/profile/")) return true

@@ -94,13 +94,13 @@ export function CoverImageField({
       />
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => inputRef.current?.click()}>
-          {busy ? <Loader2 className="size-4 animate-spin" /> : null}
-          {shown ? "Replace" : "Upload"}
+          {upload.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+          {upload.isPending ? "Uploading..." : shown ? "Replace" : "Upload"}
         </Button>
         {shown ? (
           <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => void clear()}>
-            <Trash2 className="size-4" />
-            Remove
+            {remove.isPending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+            {remove.isPending ? "Removing..." : "Remove"}
           </Button>
         ) : null}
       </div>

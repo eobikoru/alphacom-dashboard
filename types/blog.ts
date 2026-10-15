@@ -76,6 +76,23 @@ export interface BlogCategoryWrite {
   sort_order?: number
 }
 
+export interface BlogFaq {
+  id: string
+  question: string
+  answer: string
+  is_active?: boolean
+  sort_order?: number | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface BlogFaqWrite {
+  question?: string
+  answer?: string
+  is_active?: boolean
+  sort_order?: number
+}
+
 export interface BlogComment {
   id: string
   post_id?: string

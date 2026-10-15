@@ -181,7 +181,7 @@ export function PostForm({ mode, post }: PostFormProps) {
         </div>
         <Button type="submit" disabled={saving}>
           {saving ? <Loader2 className="size-4 animate-spin" /> : null}
-          Save
+          {saving ? "Saving..." : "Save"}
         </Button>
       </div>
 
