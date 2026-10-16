@@ -66,7 +66,9 @@ export function ProductDetailModal({ productId, open, onClose }: ProductDetailMo
                 </Badge>
                 {product.is_featured && <Badge variant="secondary">Featured</Badge>}
               </div>
-              {product.description && <p className="text-muted-foreground">{product.description}</p>}
+              {product.description ? (
+                <div className="blog-article text-muted-foreground" dangerouslySetInnerHTML={{ __html: product.description }} />
+              ) : null}
             </div>
 
             <Separator />

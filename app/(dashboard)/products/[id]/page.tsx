@@ -142,9 +142,11 @@ export default function ProductDetailPage() {
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground whitespace-pre-wrap">
-                {product.description || "No description available"}
-              </p>
+              {product.description ? (
+                <div className="blog-article text-muted-foreground" dangerouslySetInnerHTML={{ __html: product.description }} />
+              ) : (
+                <p className="text-muted-foreground">No description available</p>
+              )}
             </CardContent>
           </Card>
 

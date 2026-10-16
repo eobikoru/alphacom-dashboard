@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { ProductDescriptionEditor } from "@/components/product-description-editor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { ImageUpload } from "@/components/image-upload"
@@ -156,13 +156,7 @@ export default function AddProductPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description || ""}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
-                  placeholder="Detailed product description"
-                  rows={6}
-                />
+                <ProductDescriptionEditor value={formData.description} onChange={(html) => handleInputChange("description", html)} />
               </div>
             </CardContent>
           </Card>

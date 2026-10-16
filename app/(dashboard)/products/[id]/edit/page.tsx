@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { ProductDescriptionEditor } from "@/components/product-description-editor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { ArrowLeft, Loader2, Save } from "lucide-react"
@@ -204,12 +204,9 @@ function EditProductPage() {
 
             <div className="space-y-2">
               <Label htmlFor="description">Description (Optional)</Label>
-              <Textarea
-                id="description"
+              <ProductDescriptionEditor
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Enter product description"
-                rows={4}
+                onChange={(html) => setFormData((current) => ({ ...current, description: html }))}
               />
             </div>
           </CardContent>
