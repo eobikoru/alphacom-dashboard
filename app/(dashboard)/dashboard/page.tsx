@@ -1,22 +1,18 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Newsreader } from "next/font/google"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  Package,
   ShoppingCart,
-  Users,
-  TrendingUp,
   Plus,
   Upload,
   Eye,
   Edit,
   MoreHorizontal,
   RefreshCw,
-  TrendingDown,
   BarChart3,
-  AlertTriangle,
+  ArrowUpRight,
 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
@@ -24,6 +20,12 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { useDashboardStats, useLowStockProducts } from "@/hooks/use-dashboard"
 import Image from "next/image"
+
+const display = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  style: ["normal", "italic"],
+})
 
 export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false)
@@ -52,290 +54,236 @@ export default function AdminDashboard() {
     }
   }
 
+  const money = new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    maximumFractionDigits: 0,
+  })
+  const today = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
+
   const statsCards = stats
     ? [
         {
-          title: "Total Products",
-          value: stats.total_products.toString(),
-          change: `${stats.products_change_percent > 0 ? "+" : ""}${stats.products_change_percent}%`,
-          changeType: stats.products_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
-          icon: Package,
-          description: "Active products in catalog",
+          title: "Products",
+          value: stats.total_products.toLocaleString(),
+          change: stats.products_change_percent,
+          note: "In the catalogue",
         },
         {
-          title: "Completed Orders",
-          value: stats.completed_orders_today.toString(),
-          change: `${stats.completed_orders_change_percent > 0 ? "+" : ""}${stats.completed_orders_change_percent}%`,
-          changeType: stats.completed_orders_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
-          icon: ShoppingCart,
-          description: "Completed orders today",
+          title: "Completed",
+          value: Number(stats.completed_orders_today).toLocaleString(),
+          change: stats.completed_orders_change_percent,
+          note: "Orders finished today",
         },
         {
-          title: "Total Orders",
-          value: stats.total_orders_today.toString(),
-          change: `${stats.completed_orders_change_percent > 0 ? "+" : ""}${stats.completed_orders_change_percent}%`,
-          changeType: stats.completed_orders_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
-          icon: BarChart3,
-          description: "All orders today",
+          title: "Orders",
+          value: Number(stats.total_orders_today).toLocaleString(),
+          change: stats.completed_orders_change_percent,
+          note: "Placed today",
         },
         {
-          title: "Total Customers",
-          value: stats.total_customers.toString(),
-          change: `${stats.customers_change_percent > 0 ? "+" : ""}${stats.customers_change_percent}%`,
-          changeType: stats.customers_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
-          icon: Users,
-          description: "Registered customers",
-        },
-        {
-          title: "Revenue",
-          value: `₦${(stats.revenue_this_month / 1000).toFixed(1)}K`,
-          change: `${stats.revenue_change_percent > 0 ? "+" : ""}${stats.revenue_change_percent}%`,
-          changeType: stats.revenue_change_percent >= 0 ? ("positive" as const) : ("negative" as const),
-          icon: TrendingUp,
-          description: "This month's revenue",
+          title: "Customers",
+          value: stats.total_customers.toLocaleString(),
+          change: stats.customers_change_percent,
+          note: "Registered accounts",
         },
       ]
     : []
 
+  const actions = [
+    { href: "/products/add", label: "Add a product", detail: "A single item, with its own description", icon: Plus },
+    { href: "/products/bulk", label: "Bulk import", detail: "Bring in a spreadsheet of products", icon: Upload },
+    { href: "/orders", label: "Orders", detail: "Payments, transfers, and fulfilment", icon: ShoppingCart },
+    { href: "/analytics", label: "Analytics", detail: "Revenue and how the house is moving", icon: BarChart3 },
+  ]
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-8 text-[#1c1916]">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Welcome back! Here's what's happening with your store.</p>
+          <p className="text-[11px] tracking-[0.32em] text-[#8a7352] uppercase">{today}</p>
+          <h1 className={`${display.className} mt-3 text-4xl leading-none font-normal sm:text-5xl`}>The desk</h1>
+          <p className="mt-3 max-w-md text-sm leading-6 text-[#6f675f]">Catalogue, orders, and the people buying from AlphaCom.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            size="sm"
             onClick={handleRefresh}
-            disabled={refreshing}
-            className="flex items-center gap-2 bg-transparent"
+            disabled={refreshing || isLoading}
+            className="h-10 rounded-none border-[#e4ddd2] bg-white px-4 text-[11px] tracking-[0.18em] text-[#1c1916] uppercase shadow-none hover:bg-[#f6f3ee]"
           >
-            <RefreshCw className={cn("w-4 h-4", refreshing && "animate-spin")} />
-            <span>Refresh</span>
+            <RefreshCw className={cn("size-3.5", refreshing && "animate-spin")} />
+            {refreshing ? "Refreshing" : "Refresh"}
           </Button>
-          <Link href="/products/bulk">
-            <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
-              <Upload className="w-4 h-4" />
-              <span className="hidden sm:inline">Bulk Upload</span>
-            </Button>
-          </Link>
-          <Link href="/products/add">
-            <Button size="sm" className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              <span>Add Product</span>
-            </Button>
-          </Link>
+          <Button asChild className="h-10 rounded-none bg-[#1c1916] px-4 text-[11px] tracking-[0.18em] text-[#f6f3ee] uppercase hover:bg-[#2a2622]">
+            <Link href="/products/add">
+              <Plus className="size-3.5" />
+              Add product
+            </Link>
+          </Button>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-        {isLoading
-          ? [...Array(5)].map((_, i) => (
-              <Card key={i} className="bg-card border-border">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-                  <div className="h-8 w-8 bg-muted animate-pulse rounded-lg" />
-                </CardHeader>
-                <CardContent>
-                  <div className="h-8 w-16 bg-muted animate-pulse rounded mb-2" />
-                  <div className="h-4 w-32 bg-muted animate-pulse rounded" />
-                </CardContent>
-              </Card>
-            ))
-          : statsCards.map((stat) => (
-              <Card key={stat.title} className="bg-card border-border hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-card-foreground">{stat.title}</CardTitle>
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <stat.icon className="h-4 w-4 text-primary" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-card-foreground">{stat.value}</div>
-                  <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                    <span
-                      className={cn(
-                        "flex items-center",
-                        stat.changeType === "positive" ? "text-green-500" : "text-red-500",
-                      )}
-                    >
-                      {stat.changeType === "positive" ? (
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                      ) : (
-                        <TrendingDown className="w-3 h-3 mr-1" />
-                      )}
-                      {stat.change}
-                    </span>
-                    <span>from last month</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-                </CardContent>
-              </Card>
+      <div className="grid gap-4 lg:grid-cols-4">
+        {isLoading ? (
+          <>
+            <div className="h-44 animate-pulse bg-[#1c1916]/90 lg:col-span-2" />
+            {[0, 1, 2, 3].map((item) => (
+              <div key={item} className="h-36 animate-pulse border border-[#e7e1d8] bg-white" />
             ))}
-      </div>
-
-      {/* Quick Actions and Recent Products */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-card-foreground">Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Link href="/products/add" className="block">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                <Plus className="w-4 h-4 mr-2" />
-                Add New Product
-              </Button>
-            </Link>
-            <Link href="/products/bulk" className="block">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                <Upload className="w-4 h-4 mr-2" />
-                Bulk Import
-              </Button>
-            </Link>
-            <Link href="/orders" className="block">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                View Orders
-              </Button>
-            </Link>
-            <Link href="/analytics" className="block">
-              <Button variant="outline" className="w-full justify-start bg-transparent">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Analytics
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* Recent Products */}
-        <Card className="bg-card border-border lg:col-span-2">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-card-foreground">Recent Products</CardTitle>
-                <CardDescription>Latest products added to your catalog</CardDescription>
-              </div>
-              <Link href="/products">
-                <Button variant="outline" size="sm">
-                  View All
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">
-                <RefreshCw className="w-8 h-8 text-muted-foreground mx-auto mb-2 animate-spin" />
-                <p className="text-sm text-muted-foreground">Loading products...</p>
-              </div>
-            ) : !stats?.recent_products || stats.recent_products.length === 0 ? (
-              <div className="text-center py-8">
-                <Package className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No products found</p>
-                <Link href="/products/add">
-                  <Button size="sm" className="mt-4">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Product
-                  </Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {stats.recent_products.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20 hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <Image
-                        src={product.image_url || "/placeholder.svg"}
-                        alt={product.name}
-                        width={48}
-                        height={48}
-                        className="w-12 h-12 rounded-lg object-cover"
-                      />
-                      <div>
-                        <h4 className="font-medium text-card-foreground">{product.name}</h4>
-                        <p className="text-sm text-muted-foreground">{product.category}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="font-medium text-card-foreground">₦{Number(product.price).toLocaleString()}</p>
-                        <p className="text-sm text-muted-foreground">Stock: {product.stock}</p>
-                      </div>
-                      <Badge variant={getStatusVariant(product.status)} className="capitalize">
-                        {product.status.replace("_", " ")}
-                      </Badge>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/products/${product.id}`}>
-                              <Eye className="w-4 h-4 mr-2" />
-                              View
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/products/${product.id}/edit`}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Low Stock Alert */}
-      {lowStockProducts && lowStockProducts.length > 0 && (
-        <Card className="bg-card border-border border-orange-500/50">
-          <CardHeader>
-            <div className="flex items-center space-x-2">
-              <AlertTriangle className="w-5 h-5 text-orange-500" />
-              <CardTitle className="text-card-foreground">Low Stock Alert</CardTitle>
-            </div>
-            <CardDescription>Products running low on inventory</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {lowStockProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20"
-                >
-                  <div>
-                    <h4 className="font-medium text-card-foreground">{product.name}</h4>
-                    <p className="text-sm text-muted-foreground">{product.category_name}</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="destructive">
-                      {product.stock_available} / {product.low_stock_threshold}
-                    </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">Stock remaining</p>
-                  </div>
+          </>
+        ) : (
+          <>
+            <section className="relative overflow-hidden bg-[#12110f] p-6 text-[#f4efe6] lg:col-span-2 lg:row-span-2 lg:p-8">
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_18%_0%,rgba(196,165,116,0.22),transparent_55%)]" />
+              <div className="relative flex h-full flex-col justify-between gap-10">
+                <div>
+                  <p className="text-[11px] tracking-[0.32em] text-[#c4a574] uppercase">Revenue this month</p>
+                  <p className={`${display.className} mt-4 text-5xl leading-none sm:text-6xl`}>
+                    {stats ? money.format(stats.revenue_this_month) : "—"}
+                  </p>
                 </div>
-              ))}
+                <p className="text-sm text-[#b7aea3]">
+                  <span className={stats && stats.revenue_change_percent < 0 ? "text-[#e7b2a8]" : "text-[#e7d7b8]"}>
+                    {stats ? `${stats.revenue_change_percent > 0 ? "+" : ""}${stats.revenue_change_percent}%` : "—"}
+                  </span>{" "}
+                  against last month
+                </p>
+              </div>
+            </section>
+            {statsCards.map((stat) => (
+              <section key={stat.title} className="border border-[#e7e1d8] bg-white p-5">
+                <p className="text-[11px] tracking-[0.22em] text-[#8a7352] uppercase">{stat.title}</p>
+                <p className={`${display.className} mt-3 text-4xl leading-none`}>{stat.value}</p>
+                <p className="mt-4 text-xs text-[#6f675f]">
+                  <span className={stat.change < 0 ? "text-[#9a3b32]" : "text-[#3f6b4a]"}>
+                    {stat.change > 0 ? "+" : ""}
+                    {stat.change}%
+                  </span>{" "}
+                  · {stat.note}
+                </p>
+              </section>
+            ))}
+          </>
+        )}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <section className="border border-[#e7e1d8] bg-white">
+          <header className="border-b border-[#efeae3] px-5 py-4">
+            <h2 className={`${display.className} text-2xl font-normal`}>Move</h2>
+          </header>
+          <div>
+            {actions.map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="group flex items-center justify-between gap-4 border-b border-[#efeae3] px-5 py-4 last:border-b-0 hover:bg-[#faf8f5]"
+              >
+                <span>
+                  <span className="block text-sm font-medium">{action.label}</span>
+                  <span className="mt-0.5 block text-xs text-[#6f675f]">{action.detail}</span>
+                </span>
+                <ArrowUpRight className="size-4 shrink-0 text-[#8a7352] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="border border-[#e7e1d8] bg-white lg:col-span-2">
+          <header className="flex items-center justify-between gap-3 border-b border-[#efeae3] px-5 py-4">
+            <div>
+              <h2 className={`${display.className} text-2xl font-normal`}>Latest pieces</h2>
+              <p className="mt-1 text-xs text-[#6f675f]">Newest additions to the catalogue</p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <Link href="/products" className="text-[11px] tracking-[0.18em] text-[#8a7352] uppercase hover:text-[#1c1916]">
+              View all
+            </Link>
+          </header>
+          {isLoading ? (
+            <p className="px-5 py-10 text-sm text-[#6f675f]">Loading the catalogue…</p>
+          ) : !stats?.recent_products || stats.recent_products.length === 0 ? (
+            <div className="px-5 py-10">
+              <p className="text-sm text-[#6f675f]">Nothing in the catalogue yet.</p>
+              <Button asChild className="mt-4 h-10 rounded-none bg-[#1c1916] text-[11px] tracking-[0.18em] uppercase hover:bg-[#2a2622]">
+                <Link href="/products/add">
+                  <Plus className="size-3.5" />
+                  Add product
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <ul>
+              {stats.recent_products.map((product) => (
+                <li key={product.id} className="flex items-center gap-4 border-b border-[#efeae3] px-5 py-4 last:border-b-0">
+                  <Image
+                    src={product.image_url || "/placeholder.svg"}
+                    alt=""
+                    width={56}
+                    height={56}
+                    className="size-14 shrink-0 bg-[#f6f3ee] object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{product.name}</p>
+                    <p className="mt-0.5 text-xs text-[#6f675f]">{product.category || "Uncategorised"}</p>
+                  </div>
+                  <div className="hidden text-right sm:block">
+                    <p className="text-sm">{money.format(Number(product.price))}</p>
+                    <p className="mt-0.5 text-xs text-[#6f675f]">{product.stock} in stock</p>
+                  </div>
+                  <Badge variant={getStatusVariant(product.status)} className="hidden rounded-none capitalize md:inline-flex">
+                    {product.status.replaceAll("_", " ")}
+                  </Badge>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="shrink-0" aria-label={`Actions for ${product.name}`}>
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link href={`/products/${product.id}`}>
+                          <Eye className="size-4" />
+                          View
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/products/${product.id}/edit`}>
+                          <Edit className="size-4" />
+                          Edit
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      {lowStockProducts && lowStockProducts.length > 0 ? (
+        <section className="border border-[#e7e1d8] border-l-[#c4a574] border-l-2 bg-white">
+          <header className="border-b border-[#efeae3] px-5 py-4">
+            <h2 className={`${display.className} text-2xl font-normal`}>Running low</h2>
+            <p className="mt-1 text-xs text-[#6f675f]">These pieces are close to selling through.</p>
+          </header>
+          <ul>
+            {lowStockProducts.map((product) => (
+              <li key={product.id} className="flex items-center justify-between gap-4 border-b border-[#efeae3] px-5 py-4 last:border-b-0">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{product.name}</p>
+                  <p className="mt-0.5 text-xs text-[#6f675f]">{product.category_name}</p>
+                </div>
+                <p className="shrink-0 text-sm">
+                  <span className="text-[#9a3b32]">{product.stock_available}</span>
+                  <span className="text-[#6f675f]"> / {product.low_stock_threshold}</span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   )
 }

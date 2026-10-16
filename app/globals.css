@@ -272,6 +272,37 @@
   font-weight: 600;
 }
 
+.blog-editor .ProseMirror hr,
+.blog-article hr {
+  margin: 1rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.blog-editor .ProseMirror mark,
+.blog-article mark {
+  border-radius: 0.15rem;
+  padding: 0 0.15rem;
+}
+
+.blog-editor .ProseMirror ul[data-type="taskList"],
+.blog-article ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.25rem;
+}
+
+.blog-editor .ProseMirror ul[data-type="taskList"] li,
+.blog-article ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.blog-editor .ProseMirror ul[data-type="taskList"] li > label,
+.blog-article ul[data-type="taskList"] li > label {
+  margin-top: 0.3rem;
+}
+
 .blog-editor .ProseMirror p.is-editor-empty:first-child::before {
   float: left;
   height: 0;

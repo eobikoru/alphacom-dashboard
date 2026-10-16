@@ -132,17 +132,11 @@ export function AdminSidebar({ mobileOpen = false, onMobileClose }: AdminSidebar
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border flex-shrink-0">
-        {!collapsed && (
-          <div className="flex items-center space-x-3 min-w-0">
-            <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-              <Package className="w-5 h-5 text-white" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-base font-bold text-sidebar-foreground truncate">AlphaCom</h2>
-              <p className="text-xs text-sidebar-foreground/60">Admin Panel</p>
-            </div>
-          </div>
+      <div className="flex items-center justify-between gap-2 p-4 border-b border-sidebar-border flex-shrink-0">
+        {collapsed ? (
+          <img src="/alphacom-mark.png" alt="AlphaCom" className="size-8 object-contain" />
+        ) : (
+          <img src="/alphacom-logo.png" alt="AlphaCom Tech & Gadgets" className="h-11 w-auto max-w-[168px] object-contain object-left" />
         )}
         <div className="flex items-center gap-1 flex-shrink-0">
           <Button

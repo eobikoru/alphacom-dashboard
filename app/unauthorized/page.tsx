@@ -10,6 +10,7 @@ export default function UnauthorizedPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
+          <img src="/alphacom-logo.png" alt="AlphaCom Tech & Gadgets" className="mx-auto mb-4 h-12 w-auto" />
           <div className="w-16 h-16 bg-destructive rounded-full flex items-center justify-center mx-auto">
             <Shield className="w-8 h-8 text-destructive-foreground" />
           </div>
