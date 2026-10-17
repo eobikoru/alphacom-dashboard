@@ -87,6 +87,10 @@ export interface ConfirmTransferRequest {
   note?: string
 }
 
+export interface CancelTransferRequest {
+  reason: string
+}
+
 export interface ReleaseExpiredResponse {
   cancelled_count: number
   cancelled_orders: string[]

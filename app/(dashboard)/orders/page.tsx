@@ -8,13 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Search, RefreshCw, Eye, Package, Truck, XCircle, DollarSign, Clock, Landmark } from "lucide-react"
+import { Search, RefreshCw, Eye, Package, Truck, XCircle, DollarSign, Clock, Landmark, Ban } from "lucide-react"
 import { OrderDetailsModal } from "@/components/order-details-modal"
 import { ShipOrderModal } from "@/components/ship-order-modal"
 import { DeliverOrderModal } from "@/components/deliver-order-modal"
 import { CancelOrderModal } from "@/components/cancel-order-modal"
 import { RefundOrderModal } from "@/components/refund-order-modal"
 import { ConfirmTransferModal } from "@/components/confirm-transfer-modal"
+import { CancelTransferModal } from "@/components/cancel-transfer-modal"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Pagination } from "@/components/pagination"
 import type { OrderStatus, PaymentStatus } from "@/types/order"
@@ -54,6 +55,7 @@ export default function OrdersPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false)
   const [refundModalOpen, setRefundModalOpen] = useState(false)
   const [confirmTransferOpen, setConfirmTransferOpen] = useState(false)
+  const [cancelTransferOpen, setCancelTransferOpen] = useState(false)
 
   const { data, isLoading } = useOrders({
     page,
@@ -130,6 +132,11 @@ export default function OrdersPage() {
   const openConfirmTransfer = (orderId: string) => {
     setSelectedOrderId(orderId)
     setConfirmTransferOpen(true)
+  }
+
+  const openCancelTransfer = (orderId: string) => {
+    setSelectedOrderId(orderId)
+    setCancelTransferOpen(true)
   }
 
   return (
@@ -315,6 +322,16 @@ export default function OrdersPage() {
                             <Landmark className="h-4 w-4" />
                           </Button>
                         )}
+                        {order.mode === "transfer" && order.payment_status === "pending" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openCancelTransfer(order.id)}
+                            aria-label="Cancel transfer"
+                          >
+                            <Ban className="h-4 w-4" />
+                          </Button>
+                        )}
                         {order.status === "processing" && (
                           <Button variant="ghost" size="sm" onClick={() => openShipModal(order.id)}>
                             <Truck className="h-4 w-4" />
@@ -381,6 +398,7 @@ export default function OrdersPage() {
           <CancelOrderModal orderId={selectedOrderId} open={cancelModalOpen} onOpenChange={setCancelModalOpen} />
           <RefundOrderModal orderId={selectedOrderId} open={refundModalOpen} onOpenChange={setRefundModalOpen} />
           <ConfirmTransferModal orderId={selectedOrderId} open={confirmTransferOpen} onOpenChange={setConfirmTransferOpen} />
+          <CancelTransferModal orderId={selectedOrderId} open={cancelTransferOpen} onOpenChange={setCancelTransferOpen} />
         </>
       )}
     </div>

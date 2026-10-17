@@ -7,9 +7,10 @@ import {
   cancelOrder,
   refundOrder,
   confirmTransfer,
+  cancelTransfer,
   releaseExpiredReservations,
 } from "@/lib/api/orders"
-import type { ShipOrderRequest, CancelOrderRequest, RefundOrderRequest, ConfirmTransferRequest } from "@/types/order"
+import type { ShipOrderRequest, CancelOrderRequest, RefundOrderRequest, ConfirmTransferRequest, CancelTransferRequest } from "@/types/order"
 import { toast } from "sonner"
 
 export const orderKeys = {
@@ -118,6 +119,23 @@ export const useConfirmTransfer = () => {
     onError: (error: unknown) => {
       const detail = (error as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
       toast.error(typeof detail === "string" ? detail : "Could not confirm this transfer")
+    },
+  })
+}
+
+export const useCancelTransfer = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ orderId, data }: { orderId: string; data: CancelTransferRequest }) => cancelTransfer(orderId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: orderKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(variables.orderId) })
+      toast.success("Transfer cancelled")
+    },
+    onError: (error: unknown) => {
+      const detail = (error as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
+      toast.error(typeof detail === "string" ? detail : "Could not cancel this transfer")
     },
   })
 }

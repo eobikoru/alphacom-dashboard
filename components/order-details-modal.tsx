@@ -3,11 +3,12 @@
 import { useState } from "react"
 import { useOrderDetails, useDeliverOrder } from "@/hooks/use-orders"
 import { ConfirmTransferModal } from "@/components/confirm-transfer-modal"
+import { CancelTransferModal } from "@/components/cancel-transfer-modal"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Package, Truck, MapPin, CreditCard, User, Phone, Mail, Landmark } from "lucide-react"
+import { Package, Truck, MapPin, CreditCard, User, Phone, Mail, Landmark, Ban } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { OrderStatus, PaymentStatus } from "@/types/order"
 
@@ -41,6 +42,7 @@ export function OrderDetailsModal({ orderId, open, onOpenChange }: OrderDetailsM
   const { data: order, isLoading } = useOrderDetails(orderId)
   const deliverMutation = useDeliverOrder()
   const [confirmTransferOpen, setConfirmTransferOpen] = useState(false)
+  const [cancelTransferOpen, setCancelTransferOpen] = useState(false)
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat("en-NG", {
@@ -236,6 +238,12 @@ export function OrderDetailsModal({ orderId, open, onOpenChange }: OrderDetailsM
                 Confirm transfer
               </Button>
             )}
+            {order.mode === "transfer" && order.payment_status === "pending" && (
+              <Button variant="outline" onClick={() => setCancelTransferOpen(true)} className="w-full">
+                <Ban className="mr-2 h-4 w-4" />
+                Cancel transfer
+              </Button>
+            )}
 
             {order.status === "shipped" && (
               <Button onClick={handleDeliver} disabled={deliverMutation.isPending} className="w-full">
@@ -248,6 +256,7 @@ export function OrderDetailsModal({ orderId, open, onOpenChange }: OrderDetailsM
           <p className="text-center text-muted-foreground py-8">Order not found</p>
         )}
         <ConfirmTransferModal orderId={orderId} open={confirmTransferOpen} onOpenChange={setConfirmTransferOpen} />
+        <CancelTransferModal orderId={orderId} open={cancelTransferOpen} onOpenChange={setCancelTransferOpen} />
       </DialogContent>
     </Dialog>
   )

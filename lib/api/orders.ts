@@ -6,6 +6,7 @@ import type {
   CancelOrderRequest,
   RefundOrderRequest,
   ConfirmTransferRequest,
+  CancelTransferRequest,
   ReleaseExpiredResponse,
 } from "@/types/order"
 
@@ -47,6 +48,11 @@ export const refundOrder = async (orderId: string, requestData: RefundOrderReque
 
 export const confirmTransfer = async (orderId: string, requestData: ConfirmTransferRequest): Promise<OrderDetails> => {
   const { data } = await api.post(`/api/v1/orders/${orderId}/confirm-transfer`, requestData)
+  return data.data ?? data
+}
+
+export const cancelTransfer = async (orderId: string, requestData: CancelTransferRequest): Promise<OrderDetails> => {
+  const { data } = await api.put(`/api/v1/orders/${orderId}/cancel-transfer`, requestData)
   return data.data ?? data
 }
 

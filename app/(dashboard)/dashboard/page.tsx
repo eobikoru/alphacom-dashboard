@@ -27,6 +27,42 @@ const display = Newsreader({
   style: ["normal", "italic"],
 })
 
+function CountList({ entries, empty }: { entries: [string, number][]; empty: string }) {
+  if (entries.length === 0) {
+    return <p className="px-5 py-6 text-sm text-[#6f675f]">{empty}</p>
+  }
+
+  return (
+    <ul>
+      {entries.map(([key, count]) => (
+        <li key={key} className="flex items-center justify-between gap-4 border-b border-[#efeae3] px-5 py-3.5 text-sm last:border-b-0">
+          <span className="capitalize">{key.replaceAll("_", " ")}</span>
+          <span>{count.toLocaleString()}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function StockRow({ label, value }: { label: string; value: number }) {
+  return (
+    <li className="flex items-center justify-between gap-4 border-b border-[#efeae3] px-5 py-3.5 text-sm last:border-b-0">
+      <span>{label}</span>
+      <span>{value.toLocaleString()}</span>
+    </li>
+  )
+}
+
+function JournalCount({ label, value, detail }: { label: string; value: number; detail?: string }) {
+  return (
+    <div className="bg-white px-5 py-4">
+      <p className="text-[11px] tracking-[0.22em] text-[#8a7352] uppercase">{label}</p>
+      <p className={`${display.className} mt-2 text-3xl leading-none`}>{value.toLocaleString()}</p>
+      {detail ? <p className="mt-2 text-xs text-[#6f675f]">{detail}</p> : null}
+    </div>
+  )
+}
+
 export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false)
 
@@ -57,7 +93,7 @@ export default function AdminDashboard() {
   const money = new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   })
   const today = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })
 
@@ -78,7 +114,6 @@ export default function AdminDashboard() {
         {
           title: "Orders",
           value: Number(stats.total_orders_today).toLocaleString(),
-          change: stats.completed_orders_change_percent,
           note: "Placed today",
         },
         {
@@ -143,12 +178,15 @@ export default function AdminDashboard() {
                     {stats ? money.format(stats.revenue_this_month) : "—"}
                   </p>
                 </div>
-                <p className="text-sm text-[#b7aea3]">
-                  <span className={stats && stats.revenue_change_percent < 0 ? "text-[#e7b2a8]" : "text-[#e7d7b8]"}>
-                    {stats ? `${stats.revenue_change_percent > 0 ? "+" : ""}${stats.revenue_change_percent}%` : "—"}
-                  </span>{" "}
-                  against last month
-                </p>
+                <div className="space-y-1 text-sm text-[#b7aea3]">
+                  <p>
+                    <span className={stats && stats.revenue_change_percent < 0 ? "text-[#e7b2a8]" : "text-[#e7d7b8]"}>
+                      {stats ? `${stats.revenue_change_percent > 0 ? "+" : ""}${stats.revenue_change_percent}%` : "—"}
+                    </span>{" "}
+                    against last month
+                  </p>
+                  <p>{stats ? `${stats.conversion_rate}% conversion today` : "—"}</p>
+                </div>
               </div>
             </section>
             {statsCards.map((stat) => (
@@ -156,11 +194,17 @@ export default function AdminDashboard() {
                 <p className="text-[11px] tracking-[0.22em] text-[#8a7352] uppercase">{stat.title}</p>
                 <p className={`${display.className} mt-3 text-4xl leading-none`}>{stat.value}</p>
                 <p className="mt-4 text-xs text-[#6f675f]">
-                  <span className={stat.change < 0 ? "text-[#9a3b32]" : "text-[#3f6b4a]"}>
-                    {stat.change > 0 ? "+" : ""}
-                    {stat.change}%
-                  </span>{" "}
-                  · {stat.note}
+                  {"change" in stat ? (
+                    <>
+                      <span className={stat.change < 0 ? "text-[#9a3b32]" : "text-[#3f6b4a]"}>
+                        {stat.change > 0 ? "+" : ""}
+                        {stat.change}%
+                      </span>{" "}
+                      · {stat.note}
+                    </>
+                  ) : (
+                    stat.note
+                  )}
                 </p>
               </section>
             ))}
@@ -261,6 +305,125 @@ export default function AdminDashboard() {
           )}
         </section>
       </div>
+
+      {stats ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <section className="border border-[#e7e1d8] bg-white">
+            <header className="border-b border-[#efeae3] px-5 py-4">
+              <h2 className={`${display.className} text-2xl font-normal`}>Orders</h2>
+              <p className="mt-1 text-xs text-[#6f675f]">
+                {stats.orders.guest_orders.toLocaleString()} guest · {stats.orders.registered_orders.toLocaleString()} registered
+              </p>
+            </header>
+            <CountList entries={Object.entries(stats.orders.by_status)} empty="No orders in these statuses." />
+          </section>
+
+          <section className="border border-[#e7e1d8] bg-white">
+            <header className="flex items-start justify-between gap-3 border-b border-[#efeae3] px-5 py-4">
+              <div>
+                <h2 className={`${display.className} text-2xl font-normal`}>Payments</h2>
+                <p className="mt-1 text-xs text-[#6f675f]">
+                  {stats.payments.pending_transfers.orders.toLocaleString()} transfer
+                  {stats.payments.pending_transfers.orders === 1 ? "" : "s"} waiting ·{" "}
+                  {money.format(stats.payments.pending_transfers.amount)}
+                </p>
+              </div>
+              <Link href="/orders" className="text-[11px] tracking-[0.18em] text-[#8a7352] uppercase hover:text-[#1c1916]">
+                Orders
+              </Link>
+            </header>
+            <CountList entries={Object.entries(stats.payments.by_payment_status)} empty="No payments recorded." />
+            <div className="border-t border-[#efeae3] px-5 py-4">
+              <p className="text-[11px] tracking-[0.22em] text-[#8a7352] uppercase">Completed this month</p>
+              {Object.keys(stats.payments.completed_this_month_by_mode).length === 0 ? (
+                <p className="mt-3 text-sm text-[#6f675f]">No completed payments this month.</p>
+              ) : (
+                <ul className="mt-3 space-y-3">
+                  {Object.entries(stats.payments.completed_this_month_by_mode).map(([mode, total]) => (
+                    <li key={mode} className="flex items-baseline justify-between gap-4 text-sm">
+                      <span className="capitalize">{mode === "unset" ? "No mode" : mode}</span>
+                      <span className="text-right text-[#6f675f]">
+                        {total.orders.toLocaleString()} · {money.format(total.revenue)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-4 text-xs text-[#6f675f]">
+                {stats.payments.pending_paystack_orders.toLocaleString()} Paystack{" "}
+                {stats.payments.pending_paystack_orders === 1 ? "order" : "orders"} still pending
+              </p>
+            </div>
+          </section>
+
+          <section className="border border-[#e7e1d8] bg-white">
+            <header className="border-b border-[#efeae3] px-5 py-4">
+              <h2 className={`${display.className} text-2xl font-normal`}>Stock</h2>
+            </header>
+            <ul>
+              <StockRow label="Low stock" value={stats.inventory.low_stock_products} />
+              <StockRow label="Out of stock" value={stats.inventory.out_of_stock_products} />
+              <StockRow label="Reserved" value={stats.inventory.reserved_units} />
+            </ul>
+          </section>
+
+          <section className="border border-[#e7e1d8] bg-white">
+            <header className="flex items-start justify-between gap-3 border-b border-[#efeae3] px-5 py-4">
+              <div>
+                <h2 className={`${display.className} text-2xl font-normal`}>Banners</h2>
+                <p className="mt-1 text-xs text-[#6f675f]">Homepage</p>
+              </div>
+              <Link href="/banners" className="text-[11px] tracking-[0.18em] text-[#8a7352] uppercase hover:text-[#1c1916]">
+                Manage
+              </Link>
+            </header>
+            <ul>
+              <StockRow label="Active" value={stats.banners.active} />
+              <StockRow label="Inactive" value={stats.banners.inactive} />
+            </ul>
+          </section>
+        </div>
+      ) : null}
+
+      {stats ? (
+        <section className="border border-[#e7e1d8] bg-white">
+          <header className="flex items-start justify-between gap-3 border-b border-[#efeae3] px-5 py-4">
+            <div>
+              <h2 className={`${display.className} text-2xl font-normal`}>Journal</h2>
+              <p className="mt-1 text-xs text-[#6f675f]">
+                {stats.blog.posts.total.toLocaleString()} posts · {stats.blog.active_categories.toLocaleString()} categories ·{" "}
+                {stats.blog.authors.toLocaleString()} authors
+              </p>
+            </div>
+            <Link href="/blog" className="text-[11px] tracking-[0.18em] text-[#8a7352] uppercase hover:text-[#1c1916]">
+              Open
+            </Link>
+          </header>
+          <div className="grid gap-px bg-[#efeae3] sm:grid-cols-3">
+            <JournalCount label="Published" value={stats.blog.posts.published} />
+            <JournalCount label="Drafts" value={stats.blog.posts.draft} />
+            <JournalCount label="Archived" value={stats.blog.posts.archived} />
+            <JournalCount label="Comments visible" value={stats.blog.comments.visible} />
+            <JournalCount label="Comments hidden" value={stats.blog.comments.hidden} />
+            <JournalCount label="FAQs" value={stats.blog.faqs.active} detail={`${stats.blog.faqs.inactive.toLocaleString()} hidden`} />
+          </div>
+          {stats.blog.recent_posts.length > 0 ? (
+            <ul className="border-t border-[#efeae3]">
+              {stats.blog.recent_posts.map((post) => (
+                <li key={post.id} className="border-b border-[#efeae3] last:border-b-0">
+                  <Link href={`/blog/${post.id}`} className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-[#faf8f5]">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{post.title}</span>
+                      <span className="mt-0.5 block truncate text-xs text-[#6f675f]">{post.slug}</span>
+                    </span>
+                    <span className="shrink-0 text-xs tracking-[0.14em] text-[#8a7352] uppercase">{post.status}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </section>
+      ) : null}
 
       {lowStockProducts && lowStockProducts.length > 0 ? (
         <section className="border border-[#e7e1d8] border-l-[#c4a574] border-l-2 bg-white">
