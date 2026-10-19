@@ -47,7 +47,7 @@ export const refundOrder = async (orderId: string, requestData: RefundOrderReque
 }
 
 export const confirmTransfer = async (orderId: string, requestData: ConfirmTransferRequest): Promise<OrderDetails> => {
-  const { data } = await api.post(`/api/v1/orders/${orderId}/confirm-transfer`, requestData)
+  const { data } = await api.put(`/api/v1/orders/${orderId}/confirm-transfer`, requestData)
   return data.data ?? data
 }
 
