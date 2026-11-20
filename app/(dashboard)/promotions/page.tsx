@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState, type FormEvent } from "react"
-import { Loader2, Megaphone, Plus, Trash2 } from "lucide-react"
+import { Eye, Loader2, Megaphone, Plus, Trash2 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -47,12 +47,14 @@ export default function PromotionsPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [viewId, setViewId] = useState<string | null>(null)
   const [form, setForm] = useState<PromotionForm>(emptyForm)
   const [hydratedId, setHydratedId] = useState<string | null>(null)
   const [productSearch, setProductSearch] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
 
   const editing = usePromotion(editingId ?? "")
+  const viewing = usePromotion(viewId ?? "")
   const productQuery = useQuery({
     queryKey: productKeys.list({ search: debouncedSearch || undefined, per_page: 8, page: 1 }),
     queryFn: () => getProducts({ search: debouncedSearch || undefined, per_page: 8, page: 1 }),
@@ -81,6 +83,7 @@ export default function PromotionsPage() {
   }, [editing.data, editingId, hydratedId])
 
   const results = useMemo(() => productQuery.data?.data ?? [], [productQuery.data])
+  const viewed = viewing.data ?? promotions.data?.find((promotion) => promotion.id === viewId)
 
   const openCreate = () => {
     setEditingId(null)
@@ -153,7 +156,7 @@ export default function PromotionsPage() {
             <h2 className="text-xl font-semibold">{editingId ? "Edit promotion" : "New promotion"}</h2>
             <p className="mt-1 text-sm text-muted-foreground">The HTML is saved on each selected product.</p>
           </div>
-          {editingId && editing.isLoading ? (
+          {editingId && hydratedId !== editingId && !editing.isError ? (
             <p className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
               Loading promotion…
@@ -175,6 +178,7 @@ export default function PromotionsPage() {
               <div className="space-y-2">
                 <Label>HTML</Label>
                 <ProductDescriptionEditor
+                  key={editingId ?? "new"}
                   value={form.html}
                   placeholder="Write the promotion…"
                   promotionTools
@@ -277,6 +281,10 @@ export default function PromotionsPage() {
                   </p>
                 </div>
                 <Badge variant={promotion.is_active ? "default" : "secondary"}>{promotion.is_active ? "Active" : "Hidden"}</Badge>
+                <Button variant="outline" size="sm" onClick={() => setViewId(promotion.id)}>
+                  <Eye className="size-4" />
+                  View
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => openEdit(promotion.id)}>
                   Edit
                 </Button>
@@ -288,6 +296,32 @@ export default function PromotionsPage() {
           </ul>
         )}
       </div>
+
+      <Dialog open={!!viewId} onOpenChange={(open) => !open && setViewId(null)}>
+        <DialogContent className="top-4 flex max-h-[calc(100dvh-2rem)] w-[min(960px,calc(100%-2rem))] max-w-none translate-y-0 flex-col overflow-y-auto sm:max-w-none">
+          <DialogHeader>
+            <DialogTitle>{viewed?.title || "Promotion"}</DialogTitle>
+            <DialogDescription>
+              {viewed
+                ? `${viewed.is_active ? "Active" : "Hidden"} · ${viewed.product_ids.length.toLocaleString()} product${viewed.product_ids.length === 1 ? "" : "s"}`
+                : "How this promotion appears on a product."}
+            </DialogDescription>
+          </DialogHeader>
+          {viewing.isLoading && !viewed?.html ? (
+            <p className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              Loading promotion…
+            </p>
+          ) : viewed?.html ? (
+            <div className="promotion-view blog-article" dangerouslySetInnerHTML={{ __html: viewed.html }} />
+          ) : (
+            <p className="py-6 text-sm text-muted-foreground">This promotion has no content yet.</p>
+          )}
+          {viewed && viewed.products.length > 0 ? (
+            <p className="text-xs text-muted-foreground">{viewed.products.map((product) => product.name).join(", ")}</p>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!deleteId} onOpenChange={(open) => !deletePromotion.isPending && !open && setDeleteId(null)}>
         <DialogContent>

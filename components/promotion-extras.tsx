@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Node, mergeAttributes } from "@tiptap/core"
 import { NodeViewWrapper, ReactNodeViewRenderer, type ReactNodeViewProps } from "@tiptap/react"
-import { ResizableFrame } from "@/components/promotion-editor-nodes"
+import { domElement, isImageAddress, linkedAddress, ResizableFrame } from "@/components/promotion-editor-nodes"
 import { toast } from "sonner"
 import { blogImageError } from "@/lib/blog"
 import { getApiErrorMessage, uploadBlogImage } from "@/lib/api/blog"
@@ -123,6 +123,10 @@ function SlidesView({ node, updateAttributes }: ReactNodeViewProps) {
         <div className="mt-3 space-y-3">
           {slides.map((slide, index) => (
             <div key={`edit-${index}`} className="space-y-2 border-t border-[#e7e1d8] pt-3">
+              {safeUrl(slide.image) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={safeUrl(slide.image)} alt="" style={{ display: "block", width: "100%", height: 120, objectFit: "cover", borderRadius: 8 }} />
+              ) : null}
               <input
                 value={slide.image}
                 placeholder="Image address"
@@ -204,15 +208,17 @@ export const PromotionSlides = Node.create({
   parseHTML() {
     return [
       {
-        tag: "div.promo-slides",
+        tag: "div",
         priority: 1000,
         getAttrs: (element) => {
-          if (!(element instanceof HTMLElement)) return false
-          const slides = [...element.querySelectorAll(":scope > .promo-slide")].map((slide) => ({
+          const el = domElement(element)
+          if (!el || (!el.classList.contains("promo-slides") && !el.querySelector(".promo-slide"))) return false
+          const slides = [...el.querySelectorAll(".promo-slide")].map((slide) => ({
             image: slide.querySelector("img")?.getAttribute("src") ?? "",
             title: slide.querySelector("strong")?.textContent ?? "",
             text: slide.querySelector("p")?.textContent ?? "",
           }))
+          el.replaceChildren()
           return { slides: JSON.stringify(slides.length > 0 ? slides : starterSlides), optionsOpen: false }
         },
       },
@@ -239,13 +245,13 @@ function BadgeView({ node, updateAttributes }: ReactNodeViewProps) {
   )
   if (!open) {
     return (
-      <NodeViewWrapper className="my-2" onMouseDown={(event) => event.stopPropagation()} onClick={() => updateAttributes({ optionsOpen: true })}>
+      <NodeViewWrapper as="span" className="my-2 inline-block" onMouseDown={(event) => event.stopPropagation()} onClick={() => updateAttributes({ optionsOpen: true })}>
         {badge}
       </NodeViewWrapper>
     )
   }
   return (
-    <NodeViewWrapper className="my-3">
+    <NodeViewWrapper as="span" className="my-3 block w-full">
       <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false} onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between">
           <span className="text-[11px] tracking-[0.16em] text-[#8a7352] uppercase">Badge</span>
@@ -268,7 +274,8 @@ function BadgeView({ node, updateAttributes }: ReactNodeViewProps) {
 
 export const PromotionBadge = Node.create({
   name: "promotionBadge",
-  group: "block",
+  group: "inline",
+  inline: true,
   atom: true,
   addAttributes() {
     return {
@@ -282,17 +289,20 @@ export const PromotionBadge = Node.create({
   parseHTML() {
     return [
       {
-        tag: "span.promo-badge",
+        tag: "span",
         priority: 1000,
         getAttrs: (element) => {
-          if (!(element instanceof HTMLElement)) return false
-          return {
-            text: element.textContent?.trim() || "Sale",
-            backgroundColor: element.style.backgroundColor || "#1c1916",
-            textColor: element.style.color || "#f6f3ee",
-            borderRadius: Number.parseFloat(element.style.borderRadius) || 999,
+          const el = domElement(element)
+          if (!el || !el.classList.contains("promo-badge")) return false
+          const attrs = {
+            text: el.textContent?.trim() || "Sale",
+            backgroundColor: el.style.backgroundColor || "#1c1916",
+            textColor: el.style.color || "#f6f3ee",
+            borderRadius: Number.parseFloat(el.style.borderRadius) || 999,
             optionsOpen: false,
           }
+          el.replaceChildren()
+          return attrs
         },
       },
     ]
@@ -356,16 +366,19 @@ export const PromotionNote = Node.create({
   parseHTML() {
     return [
       {
-        tag: "div.promo-note",
+        tag: "div",
         priority: 1000,
         getAttrs: (element) => {
-          if (!(element instanceof HTMLElement)) return false
-          return {
-            text: element.textContent?.trim() ?? "",
-            backgroundColor: element.style.backgroundColor || "#f6f3ee",
-            borderColor: element.style.borderLeftColor || "#c4a574",
+          const el = domElement(element)
+          if (!el || !el.classList.contains("promo-note")) return false
+          const attrs = {
+            text: el.textContent?.trim() ?? "",
+            backgroundColor: el.style.backgroundColor || "#f6f3ee",
+            borderColor: el.style.borderLeftColor || "#c4a574",
             optionsOpen: false,
           }
+          el.replaceChildren()
+          return attrs
         },
       },
     ]
@@ -422,14 +435,14 @@ function ImageView({ node, updateAttributes }: ReactNodeViewProps) {
 
   if (!open) {
     return (
-      <NodeViewWrapper className="my-3" onMouseDown={(event) => event.stopPropagation()} onClick={() => updateAttributes({ optionsOpen: true })}>
+      <NodeViewWrapper as="span" className="my-3 inline-block w-full align-top" onMouseDown={(event) => event.stopPropagation()} onClick={() => updateAttributes({ optionsOpen: true })}>
         {picture}
       </NodeViewWrapper>
     )
   }
 
   return (
-    <NodeViewWrapper className="my-3">
+    <NodeViewWrapper as="span" className="my-3 block w-full">
       <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false} onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between">
           <span className="text-[11px] tracking-[0.16em] text-[#8a7352] uppercase">Image</span>
@@ -483,7 +496,8 @@ function ImageView({ node, updateAttributes }: ReactNodeViewProps) {
 
 export const PromotionImage = Node.create({
   name: "promotionImage",
-  group: "block",
+  group: "inline",
+  inline: true,
   atom: true,
   addAttributes() {
     return {
@@ -498,19 +512,32 @@ export const PromotionImage = Node.create({
   parseHTML() {
     return [
       {
-        tag: "img.promo-image",
+        tag: "img",
         priority: 1000,
         getAttrs: (element) => {
-          if (!(element instanceof HTMLElement)) return false
-          const width = Number.parseFloat(element.style.width)
+          const el = domElement(element)
+          if (!el?.getAttribute("src")) return false
+          const width = Number.parseFloat(el.style.width)
           return {
-            src: element.getAttribute("src") ?? "",
-            alt: element.getAttribute("alt") ?? "",
-            width: Number.isFinite(width) && element.style.width.endsWith("px") ? width : 0,
-            height: element.style.height.endsWith("px") ? Number.parseFloat(element.style.height) || 0 : 0,
-            radius: Number.parseFloat(element.style.borderRadius) || 0,
+            src: el.getAttribute("src") ?? "",
+            alt: el.getAttribute("alt") ?? "",
+            width: Number.isFinite(width) && el.style.width.endsWith("px") ? width : 0,
+            height: el.style.height.endsWith("px") ? Number.parseFloat(el.style.height) || 0 : 0,
+            radius: Number.parseFloat(el.style.borderRadius) || 0,
             optionsOpen: false,
           }
+        },
+      },
+      {
+        tag: "p",
+        priority: 1000,
+        getAttrs: (element) => {
+          const el = domElement(element)
+          if (!el) return false
+          const src = linkedAddress(el)
+          if (!isImageAddress(src)) return false
+          el.replaceChildren()
+          return { src, alt: "", width: 0, height: 0, radius: 0, optionsOpen: false }
         },
       },
     ]

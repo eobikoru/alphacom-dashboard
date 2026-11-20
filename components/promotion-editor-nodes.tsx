@@ -9,6 +9,28 @@ function isBareUrl(value: string) {
   return /^(https?:\/\/|www\.)\S+$/i.test(value.trim())
 }
 
+export function linkedAddress(element: HTMLElement) {
+  const text = (element.textContent || "").replace(/\s+/g, " ").trim()
+  const anchors = [...element.querySelectorAll("a[href]")]
+  if (anchors.length === 1 && anchors[0].textContent?.trim() === element.textContent?.trim()) {
+    return anchors[0].getAttribute("href") || text
+  }
+  if (element.children.length === 0) return text
+  return ""
+}
+
+export function isImageAddress(value: string) {
+  const raw = value.trim()
+  if (!raw || /^\s*javascript:/i.test(raw) || !isBareUrl(raw)) return false
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw.replace(/^\/\//, "")}`)
+    if (url.protocol !== "http:" && url.protocol !== "https:") return false
+    return /\.(png|jpe?g|gif|webp|avif|svg)(\?|$)/i.test(url.pathname) || url.hostname.includes("cloudinary.com")
+  } catch {
+    return false
+  }
+}
+
 function youtubeId(url: URL) {
   const host = url.hostname.replace(/^www\./, "")
   if (host === "youtu.be") return url.pathname.split("/").filter(Boolean)[0] ?? ""
@@ -18,6 +40,18 @@ function youtubeId(url: URL) {
   const parts = url.pathname.split("/").filter(Boolean)
   const marker = parts.findIndex((part) => part === "embed" || part === "shorts" || part === "live" || part === "v")
   return marker >= 0 ? (parts[marker + 1] ?? "") : ""
+}
+
+function instagramEmbed(url: URL) {
+  const host = url.hostname.replace(/^www\./, "")
+  if (host !== "instagram.com") return ""
+  const parts = url.pathname.split("/").filter(Boolean)
+  const marker = parts.findIndex((part) => part === "reel" || part === "reels" || part === "p" || part === "tv")
+  if (marker < 0) return ""
+  const id = parts[marker + 1] ?? ""
+  if (!id || id === "embed") return ""
+  const kind = parts[marker] === "reels" ? "reel" : parts[marker]
+  return `https://www.instagram.com/${kind}/${id}/embed`
 }
 
 function embedMedia(raw: string): { kind: "iframe" | "video"; src: string } | null {
@@ -31,6 +65,8 @@ function embedMedia(raw: string): { kind: "iframe" | "video"; src: string } | nu
     return null
   }
   if (url.protocol !== "https:" && url.protocol !== "http:") return null
+  const instagram = instagramEmbed(url)
+  if (instagram) return { kind: "iframe", src: instagram }
   const youtube = youtubeId(url)
   if (/^[\w-]{6,}$/.test(youtube)) return { kind: "iframe", src: `https://www.youtube.com/embed/${youtube}` }
   const host = url.hostname.replace(/^www\./, "")
@@ -82,18 +118,21 @@ export function ResizableFrame({
   }
 
   return (
-    <div
+    <span
       ref={box}
-      className="relative max-w-full outline outline-[#e4ddd2]"
+      className="relative max-w-full align-top outline outline-[#e4ddd2]"
       contentEditable={false}
       style={{
+        display: "inline-block",
         width: width > 0 ? width : "100%",
         maxWidth: "100%",
         height: height > 0 ? height : undefined,
+        minHeight: height > 0 ? height : 180,
         aspectRatio: height > 0 ? undefined : "16 / 9",
+        verticalAlign: "top",
       }}
     >
-      <div className="h-full w-full overflow-hidden">{children}</div>
+      <span className="block h-full w-full overflow-hidden">{children}</span>
       <button type="button" aria-label="Drag the width" className="absolute inset-y-0 right-0 z-10 w-3 cursor-ew-resize" onPointerDown={drag("x")} onClick={(event) => event.stopPropagation()} />
       <button type="button" aria-label="Drag the height" className="absolute inset-x-0 bottom-0 z-10 h-3 cursor-ns-resize" onPointerDown={drag("y")} onClick={(event) => event.stopPropagation()} />
       <button
@@ -103,17 +142,31 @@ export function ResizableFrame({
         onPointerDown={drag("both")}
         onClick={(event) => event.stopPropagation()}
       />
-    </div>
+    </span>
   )
+}
+
+export function domElement(value: unknown): HTMLElement | null {
+  if (!value || typeof value !== "object" || !("getAttribute" in value)) return null
+  const element = value as HTMLElement
+  return typeof element.getAttribute === "function" ? element : null
+}
+
+function frameBox(element: HTMLElement) {
+  return {
+    width: element.style.width.endsWith("px") ? px(element.style.width, 0) : 0,
+    height: element.style.height.endsWith("px") ? px(element.style.height, 0) : 0,
+  }
 }
 
 function VideoLinkView({ node, updateAttributes }: ReactNodeViewProps) {
   const src = String(node.attrs.src ?? "")
-  const width = num(node.attrs.width)
-  const height = num(node.attrs.height)
   const media = embedMedia(src)
+  const instagram = Boolean(media?.src.includes("instagram.com"))
+  const width = num(node.attrs.width) || (instagram ? 400 : 0)
+  const height = num(node.attrs.height) || (instagram ? 700 : 0)
   return (
-    <NodeViewWrapper className="my-3">
+    <NodeViewWrapper as="span" className="my-3 inline-block w-full align-top">
       {media ? (
         <ResizableFrame width={width} height={height} onResize={(nextWidth, nextHeight) => updateAttributes({ width: nextWidth, height: nextHeight })}>
           {media.kind === "iframe" ? (
@@ -315,11 +368,11 @@ function CallToActionView({ node, updateAttributes }: ReactNodeViewProps) {
   )
 
   if (!optionsOpen) {
-    return <NodeViewWrapper className="my-2">{button}</NodeViewWrapper>
+    return <NodeViewWrapper as="span" className="my-2 inline-block max-w-full align-top">{button}</NodeViewWrapper>
   }
 
   return (
-    <NodeViewWrapper className="my-3">
+    <NodeViewWrapper as="span" className="my-3 block w-full">
       <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false}>
         <div className="flex items-center justify-between gap-3">
           <span className="text-[11px] tracking-[0.16em] text-[#8a7352] uppercase">Button</span>
@@ -372,7 +425,8 @@ function CallToActionView({ node, updateAttributes }: ReactNodeViewProps) {
 
 export const PromotionVideo = Node.create({
   name: "promotionVideo",
-  group: "block",
+  group: "inline",
+  inline: true,
   atom: true,
   draggable: true,
   addAttributes() {
@@ -383,27 +437,26 @@ export const PromotionVideo = Node.create({
     }
   },
   parseHTML() {
+    const media = (element: unknown) => {
+      const el = domElement(element)
+      if (!el) return false
+      const src = el.getAttribute("src") || ""
+      if (!src) return false
+      return { src, ...frameBox(el) }
+    }
     return [
-      {
-        tag: "iframe.promo-video, video.promo-video",
-        priority: 1000,
-        getAttrs: (element) => {
-          if (!(element instanceof HTMLElement)) return false
-          return {
-            src: element.getAttribute("src") ?? "",
-            width: element.style.width.endsWith("px") ? px(element.style.width, 0) : 0,
-            height: element.style.height.endsWith("px") ? px(element.style.height, 0) : 0,
-          }
-        },
-      },
+      { tag: "iframe", priority: 1000, getAttrs: media },
+      { tag: "video", priority: 1000, getAttrs: media },
       {
         tag: "p",
         priority: 1000,
         getAttrs: (element) => {
-          if (!(element instanceof HTMLElement)) return false
-          const text = element.textContent?.trim() ?? ""
-          if (!isBareUrl(text) || element.children.length > 0) return false
-          return { src: text }
+          const el = domElement(element)
+          if (!el) return false
+          const src = linkedAddress(el)
+          if (!src || !embedMedia(src)) return false
+          el.replaceChildren()
+          return { src }
         },
       },
     ]
@@ -416,7 +469,10 @@ export const PromotionVideo = Node.create({
       const href = /^https?:\/\//i.test(src) || src.startsWith("/") ? src : `https://${src}`
       return ["p", {}, href]
     }
-    const style = `${frameStyle(num(node.attrs.width), num(node.attrs.height))}object-fit:contain;`
+    const instagram = media.src.includes("instagram.com")
+    const width = num(node.attrs.width) || (instagram ? 400 : 0)
+    const height = num(node.attrs.height) || (instagram ? 700 : 0)
+    const style = `${frameStyle(width, height)}object-fit:contain;`
     if (media.kind === "video") {
       return ["video", mergeAttributes({ class: "promo-video", src: media.src, controls: "true", style })]
     }
@@ -439,7 +495,8 @@ export const PromotionVideo = Node.create({
 
 export const PromotionButton = Node.create({
   name: "promotionButton",
-  group: "block",
+  group: "inline",
+  inline: true,
   atom: true,
   draggable: true,
   addAttributes() {
@@ -462,11 +519,17 @@ export const PromotionButton = Node.create({
   parseHTML() {
     return [
       {
-        tag: "a.btn",
+        tag: "a",
         priority: 1000,
         getAttrs: (element) => {
-          if (!(element instanceof HTMLElement)) return false
-          return buttonAttrsFromElement(element)
+          const el = domElement(element)
+          if (!el) return false
+          const className = el.getAttribute("class") || ""
+          const style = el.getAttribute("style") || ""
+          if (!className.split(/\s+/).includes("btn") && !style.includes("inline-flex")) return false
+          const attrs = buttonAttrsFromElement(el)
+          el.replaceChildren()
+          return attrs
         },
       },
     ]

@@ -14,6 +14,17 @@ function htmlValue(editor: Editor) {
   return editor.isEmpty ? "" : editor.getHTML()
 }
 
+function promotionSource(value: string) {
+  if (typeof document === "undefined") return value
+  let html = value
+  for (let pass = 0; pass < 2 && html.trim().startsWith("&lt;"); pass += 1) {
+    const area = document.createElement("textarea")
+    area.innerHTML = html
+    html = area.value
+  }
+  return html
+}
+
 export function ProductDescriptionEditor({
   value,
   onChange,
@@ -31,6 +42,8 @@ export function ProductDescriptionEditor({
   const [linkPrompt, setLinkPrompt] = useState<{ top: number; left: number; from: number } | null>(null)
   const [linkDraft, setLinkDraft] = useState("")
 
+  const source = promotionTools ? promotionSource(value) : value
+
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: true,
@@ -43,7 +56,7 @@ export function ProductDescriptionEditor({
       TableHeader,
       TableCell,
     ],
-    content: value || "",
+    content: source || "",
     editorProps: {
       attributes: {
         class: "min-h-40 px-4 py-3 focus:outline-none",
@@ -56,13 +69,10 @@ export function ProductDescriptionEditor({
 
   useEffect(() => {
     if (!editor) return
-    if (!value) {
-      if (editor.isEmpty) return
-      editor.commands.setContent("", { emitUpdate: false })
-      return
-    }
-    if (value !== editor.getHTML()) editor.commands.setContent(value, { emitUpdate: false })
-  }, [editor, value])
+    const next = promotionTools ? promotionSource(value) : value
+    if ((next || "") === editor.getHTML()) return
+    editor.commands.setContent(next || "", { emitUpdate: false })
+  }, [editor, promotionTools, value])
 
   useEffect(() => {
     if (!linkPrompt) return

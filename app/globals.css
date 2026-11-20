@@ -254,6 +254,32 @@
   border-radius: 0.5rem;
 }
 
+.promotion-view iframe,
+.promotion-view video,
+.promotion-view img {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain;
+}
+
+.promotion-view iframe,
+.promotion-view video {
+  aspect-ratio: 16 / 9;
+  border: 0;
+}
+
+.promotion-view iframe[src*="instagram.com"] {
+  aspect-ratio: auto;
+  height: 1080px !important;
+}
+
+.promotion-view .promo-slide img {
+  height: auto !important;
+}
+
 .blog-article table {
   width: 100%;
   border-collapse: collapse;
