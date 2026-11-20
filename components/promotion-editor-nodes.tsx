@@ -78,6 +78,14 @@ function embedMedia(raw: string): { kind: "iframe" | "video"; src: string } | nu
   return null
 }
 
+export function promotionFromAddress(raw: string): { type: "promotionVideo" | "promotionImage"; attrs: { src: string } } | null {
+  const text = raw.trim()
+  if (!text || /\s/.test(text)) return null
+  if (embedMedia(text)) return { type: "promotionVideo", attrs: { src: text } }
+  if (isImageAddress(text)) return { type: "promotionImage", attrs: { src: text } }
+  return null
+}
+
 function frameStyle(width: number, height: number) {
   const size = width > 0 ? `width:${Math.round(width)}px;max-width:100%;` : "width:100%;"
   const tall = height > 0 ? `height:${Math.round(height)}px;` : "aspect-ratio:16/9;height:auto;"
@@ -133,12 +141,12 @@ export function ResizableFrame({
       }}
     >
       <span className="block h-full w-full overflow-hidden">{children}</span>
-      <button type="button" aria-label="Drag the width" className="absolute inset-y-0 right-0 z-10 w-3 cursor-ew-resize" onPointerDown={drag("x")} onClick={(event) => event.stopPropagation()} />
-      <button type="button" aria-label="Drag the height" className="absolute inset-x-0 bottom-0 z-10 h-3 cursor-ns-resize" onPointerDown={drag("y")} onClick={(event) => event.stopPropagation()} />
+      <button type="button" aria-label="Drag the width" className="absolute inset-y-0 right-0 z-20 w-3 cursor-ew-resize" onPointerDown={drag("x")} onClick={(event) => event.stopPropagation()} />
+      <button type="button" aria-label="Drag the height" className="absolute inset-x-0 bottom-0 z-20 h-3 cursor-ns-resize" onPointerDown={drag("y")} onClick={(event) => event.stopPropagation()} />
       <button
         type="button"
         aria-label="Drag the frame size"
-        className="absolute right-1 bottom-1 z-10 size-3.5 cursor-nwse-resize border border-[#1c1916] bg-[#f6f3ee]"
+        className="absolute right-1 bottom-1 z-20 size-3.5 cursor-nwse-resize border border-[#1c1916] bg-[#f6f3ee]"
         onPointerDown={drag("both")}
         onClick={(event) => event.stopPropagation()}
       />
@@ -216,9 +224,8 @@ export function promotionButtonStyle(attrs: ButtonAttrs): CSSProperties {
     boxSizing: "border-box",
     textDecoration: "none",
     cursor: "grab",
-    position: "relative",
-    left: num(attrs.offsetX),
-    top: num(attrs.offsetY),
+    marginLeft: num(attrs.offsetX),
+    marginTop: num(attrs.offsetY),
     height: num(attrs.height, 44),
     padding: `0 ${num(attrs.paddingX, 18)}px`,
     borderRadius: num(attrs.borderRadius),
@@ -239,9 +246,8 @@ function promotionButtonInlineStyle(attrs: ButtonAttrs) {
     "justify-content:center",
     "box-sizing:border-box",
     "text-decoration:none",
-    "position:relative",
-    `left:${num(attrs.offsetX)}px`,
-    `top:${num(attrs.offsetY)}px`,
+    `margin-left:${num(attrs.offsetX)}px`,
+    `margin-top:${num(attrs.offsetY)}px`,
     `height:${num(attrs.height, 44)}px`,
     `padding:0 ${num(attrs.paddingX, 18)}px`,
     `border-radius:${num(attrs.borderRadius)}px`,
@@ -270,9 +276,14 @@ function buttonAttrsFromElement(element: HTMLElement) {
     height: px(style.height, 44),
     width: style.width ? px(style.width, 0) : 0,
     paddingX,
-    offsetX: px(style.left, 0),
-    offsetY: px(style.top, 0),
+    offsetX: placed(style.marginLeft, style.left),
+    offsetY: placed(style.marginTop, style.top),
   }
+}
+
+function placed(primary: string, fallback: string) {
+  if (primary && primary !== "auto") return px(primary, 0)
+  return px(fallback, 0)
 }
 
 const ignoredAttr = {
@@ -342,8 +353,8 @@ function CallToActionView({ node, updateAttributes }: ReactNodeViewProps) {
       if (Math.abs(pointer.clientX - startX) > 3 || Math.abs(pointer.clientY - startY) > 3) moved = true
       if (!moved) return
       updateAttributes({
-        offsetX: Math.round(originX + pointer.clientX - startX),
-        offsetY: Math.round(originY + pointer.clientY - startY),
+        offsetX: Math.max(0, Math.round(originX + pointer.clientX - startX)),
+        offsetY: Math.max(0, Math.round(originY + pointer.clientY - startY)),
       })
     }
     const stop = () => {
@@ -358,22 +369,28 @@ function CallToActionView({ node, updateAttributes }: ReactNodeViewProps) {
   const button = (
     <a
       href={String(attrs.href || "#")}
+      draggable={false}
       className="btn"
       style={promotionButtonStyle(attrs)}
       onClick={(event) => event.preventDefault()}
+      onDragStart={(event) => event.preventDefault()}
       onPointerDown={drag}
     >
       {String(attrs.label || "Button")}
     </a>
   )
 
-  if (!optionsOpen) {
-    return <NodeViewWrapper as="span" className="my-2 inline-block max-w-full align-top">{button}</NodeViewWrapper>
-  }
-
   return (
-    <NodeViewWrapper as="span" className="my-3 block w-full">
-      <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false}>
+    <NodeViewWrapper as="span" className="my-2 block w-full align-top" style={{ overflow: "visible" }}>
+      {optionsOpen ? (
+      <div
+        className="mb-3 rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3"
+        contentEditable={false}
+        onMouseDown={(event) => event.stopPropagation()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault()
+        }}
+      >
         <div className="flex items-center justify-between gap-3">
           <span className="text-[11px] tracking-[0.16em] text-[#8a7352] uppercase">Button</span>
           <span className="flex items-center gap-3">
@@ -383,7 +400,10 @@ function CallToActionView({ node, updateAttributes }: ReactNodeViewProps) {
             <button
               type="button"
               className="text-xs text-[#1c1916]"
-              onMouseDown={(event) => event.stopPropagation()}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+              }}
               onClick={() => updateAttributes({ optionsOpen: false })}
             >
               Done
@@ -416,9 +436,10 @@ function CallToActionView({ node, updateAttributes }: ReactNodeViewProps) {
           <NumberField label="Padding" value={num(attrs.paddingX, 18)} onChange={(paddingX) => updateAttributes({ paddingX })} />
           <NumberField label="Width" value={num(attrs.width)} onChange={(width) => updateAttributes({ width })} />
         </div>
-        <p className="mt-3 text-xs text-[#6f675f]">Drag the button to place it. Done leaves only the button in the text.</p>
-        {button}
+        <p className="mt-3 text-xs text-[#6f675f]">Drag the button to place it. Done leaves the button where you put it.</p>
       </div>
+      ) : null}
+      {button}
     </NodeViewWrapper>
   )
 }
@@ -535,9 +556,9 @@ export const PromotionButton = Node.create({
     ]
   },
   renderHTML({ node }) {
-    const href = String(node.attrs.href ?? "").trim()
-    const label = String(node.attrs.label ?? "").trim()
-    if (!href || !label || /^\s*javascript:/i.test(href)) return ["a", { "data-empty-promotion": "true" }]
+    const href = String(node.attrs.href ?? "").trim() || "#"
+    const label = String(node.attrs.label ?? "").trim() || "Button"
+    if (/^\s*javascript:/i.test(href)) return ["a", { "data-empty-promotion": "true" }]
     return ["a", mergeAttributes({ href, class: "btn", style: promotionButtonInlineStyle(node.attrs) }), label]
   },
   addNodeView() {

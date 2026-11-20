@@ -88,6 +88,14 @@
   }
 }
 
+.blog-editor .ProseMirror {
+  overflow: visible;
+}
+
+.blog-editor .ProseMirror a.btn {
+  text-decoration: none;
+}
+
 .blog-editor .ProseMirror h2,
 .blog-editor .ProseMirror h3,
 .blog-editor .ProseMirror h4 {

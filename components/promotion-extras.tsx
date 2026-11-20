@@ -113,10 +113,10 @@ function SlidesView({ node, updateAttributes }: ReactNodeViewProps) {
 
   return (
     <NodeViewWrapper className="my-3">
-      <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false} onMouseDown={(event) => event.stopPropagation()}>
+      <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false} onMouseDown={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault() }}>
         <div className="flex items-center justify-between gap-3">
           <span className="text-[11px] tracking-[0.16em] text-[#8a7352] uppercase">Slides</span>
-          <button type="button" className="text-xs text-[#1c1916]" onClick={() => updateAttributes({ optionsOpen: false })}>
+          <button type="button" className="text-xs text-[#1c1916]" onMouseDown={(event) => event.preventDefault()} onClick={() => updateAttributes({ optionsOpen: false })}>
             Done
           </button>
         </div>
@@ -252,10 +252,10 @@ function BadgeView({ node, updateAttributes }: ReactNodeViewProps) {
   }
   return (
     <NodeViewWrapper as="span" className="my-3 block w-full">
-      <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false} onMouseDown={(event) => event.stopPropagation()}>
+      <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false} onMouseDown={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault() }}>
         <div className="flex items-center justify-between">
           <span className="text-[11px] tracking-[0.16em] text-[#8a7352] uppercase">Badge</span>
-          <button type="button" className="text-xs" onClick={() => updateAttributes({ optionsOpen: false })}>Done</button>
+          <button type="button" className="text-xs" onMouseDown={(event) => event.preventDefault()} onClick={() => updateAttributes({ optionsOpen: false })}>Done</button>
         </div>
         <input value={text} className="mt-2 w-full bg-transparent text-sm outline-none" onChange={(event) => updateAttributes({ text: event.target.value })} />
         <div className="mt-2 grid grid-cols-2 gap-2">
@@ -334,10 +334,10 @@ function NoteView({ node, updateAttributes }: ReactNodeViewProps) {
   }
   return (
     <NodeViewWrapper className="my-3">
-      <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false} onMouseDown={(event) => event.stopPropagation()}>
+      <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false} onMouseDown={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault() }}>
         <div className="flex items-center justify-between">
           <span className="text-[11px] tracking-[0.16em] text-[#8a7352] uppercase">Note</span>
-          <button type="button" className="text-xs" onClick={() => updateAttributes({ optionsOpen: false })}>Done</button>
+          <button type="button" className="text-xs" onMouseDown={(event) => event.preventDefault()} onClick={() => updateAttributes({ optionsOpen: false })}>Done</button>
         </div>
         <textarea
           value={text}
@@ -443,10 +443,10 @@ function ImageView({ node, updateAttributes }: ReactNodeViewProps) {
 
   return (
     <NodeViewWrapper as="span" className="my-3 block w-full">
-      <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false} onMouseDown={(event) => event.stopPropagation()}>
+      <div className="rounded-md border border-[#e4ddd2] bg-[#faf8f5] px-3 py-3" contentEditable={false} onMouseDown={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault() }}>
         <div className="flex items-center justify-between">
           <span className="text-[11px] tracking-[0.16em] text-[#8a7352] uppercase">Image</span>
-          <button type="button" className="text-xs" onClick={() => updateAttributes({ optionsOpen: false })}>
+          <button type="button" className="text-xs" onMouseDown={(event) => event.preventDefault()} onClick={() => updateAttributes({ optionsOpen: false })}>
             Done
           </button>
         </div>

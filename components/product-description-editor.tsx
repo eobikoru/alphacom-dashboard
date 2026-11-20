@@ -4,14 +4,41 @@ import { useEffect, useRef, useState } from "react"
 import { useEditor, EditorContent, type Editor } from "@tiptap/react"
 import Placeholder from "@tiptap/extension-placeholder"
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table"
+import { toast } from "sonner"
 import { formattingExtensions } from "@/components/editor-formatting"
 import { EditorToolbar } from "@/components/editor-toolbar"
-import { PromotionButton, PromotionVideo } from "@/components/promotion-editor-nodes"
+import { PromotionButton, PromotionVideo, promotionFromAddress } from "@/components/promotion-editor-nodes"
 import { PromotionBadge, PromotionImage, PromotionNote, PromotionSlides } from "@/components/promotion-extras"
 import { Button } from "@/components/ui/button"
+import { getApiErrorMessage, uploadBlogImage } from "@/lib/api/blog"
+import { blogImageError } from "@/lib/blog"
+
+function hasPromotion(editor: Editor) {
+  let found = false
+  editor.state.doc.descendants((node) => {
+    if (node.type.name.startsWith("promotion")) found = true
+  })
+  return found
+}
 
 function htmlValue(editor: Editor) {
-  return editor.isEmpty ? "" : editor.getHTML()
+  if (!hasPromotion(editor) && editor.isEmpty) return ""
+  return editor.getHTML()
+}
+
+function pastedImage(event: ClipboardEvent) {
+  const files = event.clipboardData?.files
+  if (files) {
+    for (const file of Array.from(files)) {
+      if (file.type.startsWith("image/")) return file
+    }
+  }
+  const items = event.clipboardData?.items
+  if (!items) return null
+  for (const item of Array.from(items)) {
+    if (item.type.startsWith("image/")) return item.getAsFile()
+  }
+  return null
 }
 
 function promotionSource(value: string) {
@@ -44,6 +71,8 @@ export function ProductDescriptionEditor({
 
   const source = promotionTools ? promotionSource(value) : value
 
+  const emitted = useRef<string | null>(null)
+
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: true,
@@ -61,17 +90,50 @@ export function ProductDescriptionEditor({
       attributes: {
         class: "min-h-40 px-4 py-3 focus:outline-none",
       },
+      handlePaste: (view, event) => {
+        if (!promotionTools) return false
+        const target = event.target
+        if (target instanceof Element && target.closest("input, textarea")) return false
+        const file = pastedImage(event)
+        if (file) {
+          event.preventDefault()
+          const imageError = blogImageError(file)
+          if (imageError) {
+            toast.error(imageError)
+            return true
+          }
+          const from = view.state.selection.from
+          void uploadBlogImage(file)
+            .then((uploaded) => {
+              const nodeType = view.state.schema.nodes.promotionImage
+              if (!uploaded.url || view.isDestroyed || !nodeType) return
+              view.dispatch(view.state.tr.insert(from, nodeType.create({ src: uploaded.url })))
+            })
+            .catch((error) => toast.error(getApiErrorMessage(error, "Could not upload that image.")))
+          return true
+        }
+        const block = promotionFromAddress(event.clipboardData?.getData("text/plain") ?? "")
+        if (!block) return false
+        const nodeType = view.state.schema.nodes[block.type]
+        if (!nodeType) return false
+        view.dispatch(view.state.tr.replaceSelectionWith(nodeType.create(block.attrs)))
+        return true
+      },
     },
     onUpdate: ({ editor: current }) => {
-      onChangeRef.current(htmlValue(current))
+      const html = htmlValue(current)
+      emitted.current = html
+      onChangeRef.current(html)
     },
   })
 
   useEffect(() => {
     if (!editor) return
-    const next = promotionTools ? promotionSource(value) : value
-    if ((next || "") === editor.getHTML()) return
-    editor.commands.setContent(next || "", { emitUpdate: false })
+    const next = (promotionTools ? promotionSource(value) : value) || ""
+    if (next === emitted.current || next === editor.getHTML()) return
+    if (!next && hasPromotion(editor)) return
+    emitted.current = next
+    editor.commands.setContent(next, { emitUpdate: false })
   }, [editor, promotionTools, value])
 
   useEffect(() => {
@@ -99,7 +161,7 @@ export function ProductDescriptionEditor({
 
   return (
     <>
-    <div className="blog-editor overflow-hidden rounded-md border bg-background">
+    <div className="blog-editor overflow-visible rounded-md border bg-background">
       <EditorToolbar
         editor={editor}
         extra={
