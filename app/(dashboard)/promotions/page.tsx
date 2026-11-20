@@ -122,7 +122,7 @@ export default function PromotionsPage() {
     event.preventDefault()
     const title = form.title.trim()
     const html = savedPromotionHtml(form.html)
-    if (!title || !html || saving) return
+    if (!html || saving) return
     const body = {
       title,
       html,
@@ -164,15 +164,12 @@ export default function PromotionsPage() {
           ) : (
             <form onSubmit={submit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="promotion-title">
-                  Title <span className="text-destructive">*</span>
-                </Label>
+                <Label htmlFor="promotion-title">Title</Label>
                 <Input
                   id="promotion-title"
                   value={form.title}
                   placeholder="Weekend launch"
                   onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-                  required
                 />
               </div>
               <div className="space-y-2">
@@ -245,7 +242,7 @@ export default function PromotionsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={saving || !form.title.trim() || !savedPromotionHtml(form.html)}
+                  disabled={saving || !savedPromotionHtml(form.html)}
                 >
                   {saving ? <Loader2 className="size-4 animate-spin" /> : null}
                   {saving ? "Saving..." : editingId ? "Save promotion" : "Create promotion"}
