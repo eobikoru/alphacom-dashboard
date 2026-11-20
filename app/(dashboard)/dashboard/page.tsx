@@ -1,6 +1,5 @@
 "use client"
 
-import { Newsreader } from "next/font/google"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,15 +16,10 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { useState } from "react"
+import { display } from "@/lib/display-font"
 import { cn } from "@/lib/utils"
 import { useDashboardStats, useLowStockProducts } from "@/hooks/use-dashboard"
 import Image from "next/image"
-
-const display = Newsreader({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  style: ["normal", "italic"],
-})
 
 function CountList({ entries, empty }: { entries: [string, number][]; empty: string }) {
   if (entries.length === 0) {

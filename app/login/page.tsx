@@ -3,7 +3,6 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Newsreader } from "next/font/google"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,13 +11,8 @@ import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { useMutation } from "@tanstack/react-query"
 import { loginAdmin, setAuthTokens, setAdminInfo } from "@/lib/auth"
 import { getDashboardAccess } from "@/lib/roles"
+import { display } from "@/lib/display-font"
 import { toast } from "sonner"
-
-const display = Newsreader({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  style: ["normal", "italic"],
-})
 
 export default function AdminLoginPage() {
   const [formData, setFormData] = useState({

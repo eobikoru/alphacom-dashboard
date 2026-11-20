@@ -1,6 +1,5 @@
 "use client"
 
-import { Newsreader } from "next/font/google"
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
@@ -9,13 +8,8 @@ import { RefreshCw } from "lucide-react"
 import { useDashboardStats, useLowStockProducts, useRevenueTrend } from "@/hooks/use-dashboard"
 import { Button } from "@/components/ui/button"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { display } from "@/lib/display-font"
 import { cn } from "@/lib/utils"
-
-const display = Newsreader({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  style: ["normal", "italic"],
-})
 
 const ranges = [7, 30, 90] as const
 
