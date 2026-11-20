@@ -150,6 +150,17 @@ export default function ProductDetailPage() {
             </CardContent>
           </Card>
 
+          {product.promotion?.html ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Promotion</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="blog-article" dangerouslySetInnerHTML={{ __html: product.promotion.html }} />
+              </CardContent>
+            </Card>
+          ) : null}
+
           {/* Additional Details */}
           <Card>
             <CardHeader>

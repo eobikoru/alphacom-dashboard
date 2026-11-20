@@ -69,6 +69,12 @@ export function ProductDetailModal({ productId, open, onClose }: ProductDetailMo
               {product.description ? (
                 <div className="blog-article text-muted-foreground" dangerouslySetInnerHTML={{ __html: product.description }} />
               ) : null}
+              {product.promotion?.html ? (
+                <div className="mt-4">
+                  <p className="mb-2 text-sm text-muted-foreground">Promotion</p>
+                  <div className="blog-article" dangerouslySetInnerHTML={{ __html: product.promotion.html }} />
+                </div>
+              ) : null}
             </div>
 
             <Separator />

@@ -1,3 +1,7 @@
+export interface ProductPromotion {
+  html?: string | null
+}
+
 export interface ProductImage {
     url: string
     public_id: string
@@ -30,6 +34,7 @@ export interface ProductImage {
     is_out_of_stock: boolean
     images: ProductImage[]
     tags: string | null
+    promotion?: ProductPromotion | null
     created_at: string
     updated_at: string
   }
@@ -69,6 +74,7 @@ export interface ProductImage {
     is_out_of_stock: boolean
     images: ProductImage[]
     tags: string | null
+    promotion?: ProductPromotion | null
     created_at: string
     updated_at: string
   }

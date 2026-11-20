@@ -22,6 +22,7 @@ import {
   BarChart3,
   X,
   Image,
+  Megaphone,
   Newspaper,
   type LucideIcon,
 } from "lucide-react"
@@ -72,6 +73,11 @@ const storeNavigation: NavItem[] = [
     name: "Banners",
     href: "/banners",
     icon: Image,
+  },
+  {
+    name: "Promotions",
+    href: "/promotions",
+    icon: Megaphone,
   },
   {
     name: "Orders",
