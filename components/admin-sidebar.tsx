@@ -23,6 +23,7 @@ import {
   X,
   Image,
   Megaphone,
+  MessageSquare,
   Newspaper,
   type LucideIcon,
 } from "lucide-react"
@@ -78,6 +79,11 @@ const storeNavigation: NavItem[] = [
     name: "Promotions",
     href: "/promotions",
     icon: Megaphone,
+  },
+  {
+    name: "WhatsApp promotion",
+    href: "/whatsapp-promotion",
+    icon: MessageSquare,
   },
   {
     name: "Orders",
